@@ -5,6 +5,16 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to publish (e.g. v0.1.2)'
+        required: true
+        type: string
+      auth:
+        description: "Publish auth mode: 'oidc' (Trusted Publishing) or 'token'"
+        required: false
+        default: oidc
+        type: string
 
 permissions:
   contents: read
@@ -15,6 +25,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # On tag push events, github.ref points at the tag.
+          # For manual runs, provide the tag input so we publish the requested release.
+          ref: ${{ github.event.inputs.tag || github.ref }}
 
       - uses: pnpm/action-setup@v4
 
@@ -22,7 +36,6 @@ jobs:
         with:
           node-version: 20
           cache: pnpm
-          registry-url: 'https://registry.npmjs.org'
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -31,7 +44,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          TAG="${GITHUB_REF_NAME}"
+          TAG="${{ github.event.inputs.tag || github.ref_name }}"
           VERSION="$(node -p "require('./package.json').version")"
           EXPECTED="v${VERSION}"
           if [ "$TAG" != "$EXPECTED" ]; then
@@ -49,5 +62,22 @@ jobs:
         run: pnpm run build
 
       - name: Publish to npm
+        shell: bash
+        # Default to npm Trusted Publishing (OIDC). You can override via workflow_dispatch input.
         run: |
+          set -euo pipefail
+          MODE="${{ github.event.inputs.auth || 'oidc' }}"
+
+          if [ "$MODE" = "token" ]; then
+            if [ -z "${NODE_AUTH_TOKEN:-}" ]; then
+              echo "auth=token requested but NODE_AUTH_TOKEN is not set for this step."
+              echo "Either switch to auth=oidc, or set NODE_AUTH_TOKEN via env/secrets for this step."
+              exit 1
+            fi
+          else
+            # Prefer OIDC even if a token exists, to avoid failures from expired/revoked tokens.
+            unset NODE_AUTH_TOKEN || true
+            rm -f "${NPM_CONFIG_USERCONFIG:-}" || true
+          fi
+
           npm publish --provenance --access public
