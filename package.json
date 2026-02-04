@@ -1,0 +1,58 @@
+{
+  "name": "jsonforms-nuxt-ui-renderers",
+  "version": "0.1.0",
+  "description": "JSONForms renderer set for Nuxt UI (@nuxt/ui) on Vue 3 / Nuxt.",
+  "license": "MIT",
+  "author": "OpenApp contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomers/jsonforms-nuxt-ui-renderers.git"
+  },
+  "homepage": "https://github.com/tomers/jsonforms-nuxt-ui-renderers",
+  "bugs": {
+    "url": "https://github.com/tomers/jsonforms-nuxt-ui-renderers/issues"
+  },
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "prepublishOnly": "pnpm run test && pnpm run build"
+  },
+  "peerDependencies": {
+    "@jsonforms/core": "^3.7.0",
+    "@jsonforms/vue": "^3.7.0",
+    "@nuxt/ui": "^4.0.0",
+    "vue": "^3.5.0"
+  },
+  "devDependencies": {
+    "@jsonforms/core": "^3.7.0",
+    "@jsonforms/vue": "^3.7.0",
+    "@nuxt/ui": "^4.0.0",
+    "@types/node": "^22.15.21",
+    "@vue/test-utils": "^2.4.6",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.9.3",
+    "tsup": "^8.5.0",
+    "vitest": "^3.2.0",
+    "vue": "^3.5.26"
+  },
+  "packageManager": "pnpm@10.26.2"
+}
+
