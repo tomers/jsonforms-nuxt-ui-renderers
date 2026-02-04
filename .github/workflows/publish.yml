@@ -34,8 +34,19 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # npm Trusted Publishing (OIDC) requires npm >= 11.5.1 (Node 24+ recommended).
+          node-version: 24
           cache: pnpm
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Ensure npm supports Trusted Publishing
+        shell: bash
+        run: |
+          set -euo pipefail
+          npm --version
+          # Keep it simple: guarantee a sufficiently new npm on the runner.
+          npm i -g npm@^11.5.1
+          npm --version
 
       - name: Install
         run: pnpm install --frozen-lockfile
