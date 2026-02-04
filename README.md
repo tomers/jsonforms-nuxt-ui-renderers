@@ -48,11 +48,12 @@ This repo is set up so you can publish via `just publish` (manual) or via GitHub
 
 - Bump `package.json` version
 - Push a tag matching the version: `vX.Y.Z` (e.g. `v0.1.0`)
-- CI will run checks and publish to npm using the `NPM_TOKEN` repo secret
+- CI will run checks and publish to npm via npm “trusted publishing” (OIDC). No repository secret is required.
 
-1. Create `.env` from `.env.example` and set:
-   - `NPM_TOKEN`: an npm access token with publish rights
-2. Run:
+### Manual publish (local)
+
+- Ensure you are authenticated to npm (e.g. `npm login` or a preconfigured npm auth in your environment)
+- Run:
 
 ```bash
 just publish
