@@ -35,6 +35,7 @@ export const NuxtUiTextareaControl = defineComponent({
             default: () =>
               h(UTextarea as any, {
                 modelValue: control.value.data ?? '',
+                class: 'w-full',
                 disabled: !control.value.enabled,
                 color: errorMessage.value ? 'error' : undefined,
                 'aria-invalid': Boolean(errorMessage.value),

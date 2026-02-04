@@ -40,6 +40,7 @@ export const NuxtUiStringControl = defineComponent({
             default: () =>
               h(UInput as any, {
                 modelValue: control.value.data ?? '',
+                class: 'w-full',
                 disabled: !control.value.enabled,
                 color: errorMessage.value ? 'error' : undefined,
                 'aria-invalid': Boolean(errorMessage.value),

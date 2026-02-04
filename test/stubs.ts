@@ -67,8 +67,10 @@ export const UiStubs = {
   USelectMenu: defineComponent({
     name: 'USelectMenu',
     props: {
-      modelValue: { type: Object, default: undefined },
+      modelValue: { type: null, default: undefined },
       items: { type: Array, default: () => [] },
+      valueKey: { type: String, default: '' },
+      labelKey: { type: String, default: '' },
       disabled: { type: Boolean, default: false },
       placeholder: { type: String, default: '' },
     },

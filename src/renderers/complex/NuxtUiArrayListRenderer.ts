@@ -30,7 +30,7 @@ export const NuxtUiArrayListRenderer = defineComponent({
     const arraySchema = computed<JsonSchema | undefined>(() => {
       try {
         return Resolve.schema(
-          (props as any).schema,
+          props.schema,
           control.value.uischema.scope,
           control.value.rootSchema,
         )
@@ -63,7 +63,7 @@ export const NuxtUiArrayListRenderer = defineComponent({
 
     function childLabelForIndex(index: number): string {
       const childLabelProp =
-        (control.value.uischema.options as any)?.childLabelProp ??
+        getChildLabelPropFromUiSchemaOptions(control.value.uischema.options) ??
         getFirstPrimitiveProp(control.value.schema)
 
       if (!childLabelProp) return `${index}`
@@ -80,6 +80,12 @@ export const NuxtUiArrayListRenderer = defineComponent({
         return ''
       }
       return String(labelValue)
+    }
+
+    function getChildLabelPropFromUiSchemaOptions(options: unknown): string | undefined {
+      if (!options || typeof options !== 'object') return undefined
+      const value = (options as Record<string, unknown>).childLabelProp
+      return typeof value === 'string' ? value : undefined
     }
 
     function addButtonClick() {

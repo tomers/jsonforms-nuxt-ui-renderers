@@ -43,11 +43,9 @@ export const NuxtUiEnumControl = defineComponent({
     const errorMessage = computed(() => trimmedOrUndefined(control.value.errors))
     const options = computed<EnumOption[]>(() => schemaEnumOptions(control.value.schema))
 
-    const selected = computed<EnumOption | undefined>({
-      get: () =>
-        options.value.find((o) => Object.is(o.value, control.value.data)) ??
-        undefined,
-      set: (v) => handleChange(control.value.path, v?.value),
+    const selectedValue = computed<unknown>({
+      get: () => control.value.data,
+      set: (v: unknown) => handleChange(control.value.path, v),
     })
 
     return () => {
@@ -70,14 +68,16 @@ export const NuxtUiEnumControl = defineComponent({
           {
             default: () =>
               h(USelectMenu as any, {
-                modelValue: selected.value,
+                modelValue: selectedValue.value,
                 items: options.value,
+                valueKey: 'value',
+                labelKey: 'label',
                 disabled: !control.value.enabled,
                 color: errorMessage.value ? 'error' : undefined,
                 'aria-invalid': Boolean(errorMessage.value),
                 placeholder: 'Select...',
-                'onUpdate:modelValue': (v: EnumOption | undefined) => {
-                  selected.value = v
+                'onUpdate:modelValue': (v: unknown) => {
+                  selectedValue.value = v
                 },
               }),
           },
