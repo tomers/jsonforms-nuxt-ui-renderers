@@ -42,7 +42,13 @@ import { nuxtUiRenderers } from 'jsonforms-nuxt-ui-renderers'
 
 ## Publishing (npm)
 
-This repo is set up so you can publish via `just publish`.
+This repo is set up so you can publish via `just publish` (manual) or via GitHub Actions (recommended).
+
+### CI publish (recommended)
+
+- Bump `package.json` version
+- Push a tag matching the version: `vX.Y.Z` (e.g. `v0.1.0`)
+- CI will run checks and publish to npm using the `NPM_TOKEN` repo secret
 
 1. Create `.env` from `.env.example` and set:
    - `NPM_TOKEN`: an npm access token with publish rights
