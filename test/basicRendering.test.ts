@@ -70,6 +70,73 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(wrapper.findAll('input').length).toBe(2)
   })
 
+  it('does not crash when UInput emits a number for integer controls', async () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        port: { type: 'integer' },
+      },
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/port',
+      label: 'Port',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { port: 0 },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const uinput = wrapper.findComponent({ name: 'UInput' })
+    expect(uinput.exists()).toBe(true)
+
+    // Nuxt UI can emit numbers for `type="number"`.
+    expect(() => uinput.vm.$emit('update:modelValue', 2)).not.toThrow()
+    await wrapper.vm.$nextTick()
+  })
+
+  it('does not crash when UInput emits a number for number controls', async () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        x: { type: 'number' },
+      },
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/x',
+      label: 'X',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { x: 1.5 },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const uinput = wrapper.findComponent({ name: 'UInput' })
+    expect(uinput.exists()).toBe(true)
+
+    expect(() => uinput.vm.$emit('update:modelValue', 3.25)).not.toThrow()
+    await wrapper.vm.$nextTick()
+  })
+
   it('renders an array control and can add an item', async () => {
     const schema = {
       type: 'object',

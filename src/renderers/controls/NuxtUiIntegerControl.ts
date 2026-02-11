@@ -19,8 +19,8 @@ export const NuxtUiIntegerControl = defineComponent({
       return v === null || v === undefined ? '' : String(v)
     })
 
-    function onUpdate(raw: string) {
-      const trimmed = raw.trim()
+    function onUpdate(raw: unknown) {
+      const trimmed = String(raw ?? '').trim()
       if (trimmed === '') {
         handleChange(control.value.path, undefined)
         return
