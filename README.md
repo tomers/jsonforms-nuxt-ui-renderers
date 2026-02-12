@@ -24,15 +24,42 @@ import { nuxtUiRenderers } from 'jsonforms-nuxt-ui-renderers'
 
 ### Important
 
-- These renderers **resolve Nuxt UI components by name** (e.g. `UInput`, `UFormField`, `UButton`).
+- These renderers **resolve Nuxt UI components by name** (e.g. `UFormField`, `UInput`, `UTextarea`, `USelectMenu`, `USwitch`, `UButton`).
   Your app must register Nuxt UI components globally (Nuxt does this when you use the `@nuxt/ui` module).
 - If you override component names or use a different UI library, these renderers will not work out of the box.
 
 ## Supported UI schema / schema constructs
 
-- **Controls**: string, multiline string, number, integer, boolean, enum
-- **Layouts**: `VerticalLayout`, `HorizontalLayout`, `Group`, `Label`, `Category`, `Categorization`
-- **Complex**: arrays (list UI), objects (delegates to generated/registered detail UI schema)
+This package is intentionally small and opinionated: it ships a **single** renderer registry (`nuxtUiRenderers`) covering the following UI schema elements / JSON Schema patterns.
+
+### Controls (field types)
+
+- **String**: JSON Schema `type: "string"` → `UInput`
+- **Multiline string**: JSONForms “multiline” control (e.g. `uischema.options.multi: true`) → `UTextarea`
+- **Password**: JSON Schema `type: "string"` + `format: "password"` → `UInput type="password"` with show/hide toggle button
+- **Number**: JSON Schema `type: "number"` → `UInput type="number"` (parses to `number`, empty becomes `undefined`)
+- **Integer**: JSON Schema `type: "integer"` → `UInput type="number" step="1"` (parses to `integer`, empty becomes `undefined`)
+- **Boolean**: JSON Schema `type: "boolean"` → `USwitch`
+- **Enum (single-select)**: JSON Schema `enum: [...]` (or `oneOf: [{ const, title? }, ...]`) → `USelectMenu`
+- **Enum (multi-select)**: JSON Schema `type: "array"` with `items` being an enum schema (supports `$ref`’d `items`) → `USelectMenu multiple`
+
+### Layouts
+
+- **`VerticalLayout`**
+- **`HorizontalLayout`** (responsive: stacks on small screens, wraps into columns on larger screens)
+- **`Group`**
+- **`Label`**
+- **`Categorization` / `Category`**
+
+### Complex types
+
+- **Arrays (list UI)**: any schema with `type: "array"` renders as a list with **Add / Remove / Up / Down**
+  - Respects `minItems` / `maxItems` (disables buttons accordingly)
+  - Item label can be customized via `uischema.options.childLabelProp`; otherwise it uses JSONForms’ first primitive property as a best-effort label
+  - “Add” uses JSONForms `createDefaultValue(...)` for the item value
+- **Objects**: object controls delegate to a **detail UI schema**
+  - If no matching detail UI schema is registered, a default one is generated via JSONForms `Generate.uiSchema(...)`
+  - The root object is rendered as a `VerticalLayout`; nested objects default to a `Group` using the control’s label
 
 ## Contributing
 
