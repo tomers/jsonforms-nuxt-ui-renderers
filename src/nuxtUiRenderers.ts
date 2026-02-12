@@ -30,6 +30,7 @@ import { NuxtUiVerticalLayoutRenderer } from './renderers/layouts/NuxtUiVertical
 
 // Intentionally rank higher than typical defaults.
 const RANK = 10
+const ENUM_RANK = RANK + 1
 
 export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
   // Layouts
@@ -74,10 +75,6 @@ export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
     renderer: markRaw(NuxtUiTextareaControl),
   },
   {
-    tester: rankWith(RANK, isStringControl),
-    renderer: markRaw(NuxtUiStringControl),
-  },
-  {
     tester: rankWith(RANK, isNumberControl),
     renderer: markRaw(NuxtUiNumberControl),
   },
@@ -90,8 +87,14 @@ export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
     renderer: markRaw(NuxtUiBooleanControl),
   },
   {
-    tester: rankWith(RANK, isEnumControl),
+    // Enum must outrank the generic string control, otherwise enums can render
+    // as freeform text inputs.
+    tester: rankWith(ENUM_RANK, isEnumControl),
     renderer: markRaw(NuxtUiEnumControl),
+  },
+  {
+    tester: rankWith(RANK, isStringControl),
+    renderer: markRaw(NuxtUiStringControl),
   },
 ]
 

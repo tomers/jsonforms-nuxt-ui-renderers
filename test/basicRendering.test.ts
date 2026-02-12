@@ -38,6 +38,38 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect((input.element as HTMLInputElement).value).toBe('Alice')
   })
 
+  it('renders an enum control as a select (not a freeform input)', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        mode: { type: 'string', enum: ['video', 'video,audio'] },
+      },
+      required: ['mode'],
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/mode',
+      label: 'WebRTC media',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { mode: 'video' },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    expect(wrapper.findComponent({ name: 'USelectMenu' }).exists()).toBe(true)
+    // Ensure the generic string renderer didn't win.
+    expect(wrapper.find('input').exists()).toBe(false)
+  })
+
   it('renders a vertical layout with two controls', () => {
     const schema = {
       type: 'object',

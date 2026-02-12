@@ -1,6 +1,6 @@
 {
   "name": "jsonforms-nuxt-ui-renderers",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "JSONForms renderer set for Nuxt UI (@nuxt/ui) on Vue 3 / Nuxt.",
   "license": "MIT",
   "author": "OpenApp contributors",
