@@ -30,16 +30,19 @@ export const UiStubs = {
       type: { type: String, default: 'text' },
     },
     emits: ['update:modelValue'],
-    setup(props, { emit }) {
+    setup(props, { emit, slots }) {
       return () =>
-        h('input', {
-          value: props.modelValue,
-          disabled: props.disabled,
-          type: props.type,
-          onInput: (e: Event) => {
-            emit('update:modelValue', (e.target as HTMLInputElement).value)
-          },
-        })
+        h('div', { 'data-uinput': '1' }, [
+          h('input', {
+            value: props.modelValue,
+            disabled: props.disabled,
+            type: props.type,
+            onInput: (e: Event) => {
+              emit('update:modelValue', (e.target as HTMLInputElement).value)
+            },
+          }),
+          slots.trailing ? slots.trailing() : null,
+        ])
     },
   }),
 

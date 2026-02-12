@@ -1,5 +1,7 @@
 import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core'
 import {
+  and,
+  formatIs,
   isBooleanControl,
   isEnumControl,
   isEnumSchema,
@@ -22,6 +24,7 @@ import { NuxtUiEnumControl } from './renderers/controls/NuxtUiEnumControl'
 import { NuxtUiIntegerControl } from './renderers/controls/NuxtUiIntegerControl'
 import { NuxtUiMultiEnumControl } from './renderers/controls/NuxtUiMultiEnumControl'
 import { NuxtUiNumberControl } from './renderers/controls/NuxtUiNumberControl'
+import { NuxtUiPasswordControl } from './renderers/controls/NuxtUiPasswordControl'
 import { NuxtUiStringControl } from './renderers/controls/NuxtUiStringControl'
 import { NuxtUiTextareaControl } from './renderers/controls/NuxtUiTextareaControl'
 import { NuxtUiCategorizationRenderer } from './renderers/layouts/NuxtUiCategorizationRenderer'
@@ -34,6 +37,7 @@ import { NuxtUiVerticalLayoutRenderer } from './renderers/layouts/NuxtUiVertical
 // Intentionally rank higher than typical defaults.
 const RANK = 10
 const ENUM_RANK = RANK + 1
+const PASSWORD_RANK = ENUM_RANK + 1
 
 const isMultiEnumControl = (
   uischema: unknown,
@@ -138,6 +142,10 @@ export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
     // as freeform text inputs.
     tester: rankWith(ENUM_RANK, isEnumControl),
     renderer: markRaw(NuxtUiEnumControl),
+  },
+  {
+    tester: rankWith(PASSWORD_RANK, and(isStringControl, formatIs('password'))),
+    renderer: markRaw(NuxtUiPasswordControl),
   },
   {
     tester: rankWith(RANK, isStringControl),

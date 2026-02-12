@@ -104,6 +104,44 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(wrapper.text()).not.toContain('No items.')
   })
 
+  it('renders a password-formatted string as a password input with toggle', async () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        nvr_password: { type: 'string', format: 'password' },
+      },
+      required: ['nvr_password'],
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/nvr_password',
+      label: 'NVR password',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { nvr_password: 'secret' },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const input = wrapper.find('input')
+    expect(input.exists()).toBe(true)
+    expect(input.attributes('type')).toBe('password')
+
+    const toggle = wrapper.find('button')
+    expect(toggle.exists()).toBe(true)
+
+    await toggle.trigger('click')
+    expect(wrapper.find('input').attributes('type')).toBe('text')
+  })
+
   it('renders a vertical layout with two controls', () => {
     const schema = {
       type: 'object',
