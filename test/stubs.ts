@@ -73,6 +73,7 @@ export const UiStubs = {
       labelKey: { type: String, default: '' },
       disabled: { type: Boolean, default: false },
       placeholder: { type: String, default: '' },
+      multiple: { type: Boolean, default: false },
     },
     emits: ['update:modelValue'],
     setup(props) {
@@ -82,6 +83,7 @@ export const UiStubs = {
             ? props.items.length
             : 0,
           'data-disabled': props.disabled ? '1' : '0',
+          'data-multiple': props.multiple ? '1' : '0',
         })
     },
   }),

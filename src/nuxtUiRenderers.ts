@@ -2,12 +2,14 @@ import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core'
 import {
   isBooleanControl,
   isEnumControl,
+  isEnumSchema,
   isIntegerControl,
   isMultiLineControl,
   isNumberControl,
   isObjectControl,
   isStringControl,
   rankWith,
+  Resolve,
   schemaTypeIs,
   uiTypeIs,
 } from '@jsonforms/core'
@@ -18,6 +20,7 @@ import { NuxtUiObjectRenderer } from './renderers/complex/NuxtUiObjectRenderer'
 import { NuxtUiBooleanControl } from './renderers/controls/NuxtUiBooleanControl'
 import { NuxtUiEnumControl } from './renderers/controls/NuxtUiEnumControl'
 import { NuxtUiIntegerControl } from './renderers/controls/NuxtUiIntegerControl'
+import { NuxtUiMultiEnumControl } from './renderers/controls/NuxtUiMultiEnumControl'
 import { NuxtUiNumberControl } from './renderers/controls/NuxtUiNumberControl'
 import { NuxtUiStringControl } from './renderers/controls/NuxtUiStringControl'
 import { NuxtUiTextareaControl } from './renderers/controls/NuxtUiTextareaControl'
@@ -31,6 +34,45 @@ import { NuxtUiVerticalLayoutRenderer } from './renderers/layouts/NuxtUiVertical
 // Intentionally rank higher than typical defaults.
 const RANK = 10
 const ENUM_RANK = RANK + 1
+
+const isMultiEnumControl = (
+  uischema: unknown,
+  schema: unknown,
+  context: unknown,
+): boolean => {
+  if (!uiTypeIs('Control')(uischema as any, schema as any, context as any)) {
+    return false
+  }
+
+  const scope = (uischema as any)?.scope
+  if (typeof scope !== 'string') return false
+
+  // JSONForms passes the root schema into testers, but different call sites can
+  // vary. Resolve against whatever we have, preferring the provided rootSchema.
+  const rootSchema = (context as any)?.rootSchema ?? (schema as any)
+  let resolved: any
+  try {
+    resolved = Resolve.schema(schema as any, scope, rootSchema)
+  } catch {
+    return false
+  }
+
+  if (resolved?.type !== 'array') return false
+
+  const items = resolved?.items
+  if (!items) return false
+
+  // JSON Schema `items` can be a schema or an array of schemas.
+  if (Array.isArray(items)) return false
+  if (typeof items !== 'object' || items === null) return false
+
+  const resolvedItems =
+    '$ref' in items && typeof (items as any).$ref === 'string'
+      ? Resolve.schema(rootSchema, (items as any).$ref, rootSchema)
+      : items
+
+  return isEnumSchema(resolvedItems as any)
+}
 
 export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
   // Layouts
@@ -85,6 +127,11 @@ export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
   {
     tester: rankWith(RANK, isBooleanControl),
     renderer: markRaw(NuxtUiBooleanControl),
+  },
+  {
+    // Multi-enum must outrank generic array renderer and string renderer.
+    tester: rankWith(ENUM_RANK, isMultiEnumControl),
+    renderer: markRaw(NuxtUiMultiEnumControl),
   },
   {
     // Enum must outrank the generic string control, otherwise enums can render

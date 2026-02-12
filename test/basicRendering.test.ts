@@ -70,6 +70,40 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(wrapper.find('input').exists()).toBe(false)
   })
 
+  it('renders a multi-enum control as a multi-select', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        tracks: { type: 'array', items: { type: 'string', enum: ['video', 'audio'] } },
+      },
+      required: ['tracks'],
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/tracks',
+      label: 'Tracks',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { tracks: ['video'] },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const select = wrapper.findComponent({ name: 'USelectMenu' })
+    expect(select.exists()).toBe(true)
+    expect(select.attributes('data-multiple')).toBe('1')
+    // Ensure the generic array renderer didn't win.
+    expect(wrapper.text()).not.toContain('No items.')
+  })
+
   it('renders a vertical layout with two controls', () => {
     const schema = {
       type: 'object',
