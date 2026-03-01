@@ -70,6 +70,45 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(wrapper.find('input').exists()).toBe(false)
   })
 
+  it('renders a oneOf enum control as a select (not a freeform input)', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        nvr_format: {
+          type: 'string',
+          oneOf: [
+            { const: 'hikvision', title: 'Hikvision / HiWatch' },
+            { const: 'dahua', title: 'Dahua / Amcrest / Lorex' },
+            { const: 'custom', title: 'Custom' },
+          ],
+          default: 'hikvision',
+        },
+      },
+      required: ['nvr_format'],
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/nvr_format',
+      label: 'NVR format',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { nvr_format: 'dahua' },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    expect(wrapper.findComponent({ name: 'USelectMenu' }).exists()).toBe(true)
+    expect(wrapper.find('input').exists()).toBe(false)
+  })
+
   it('renders a multi-enum control as a multi-select', () => {
     const schema = {
       type: 'object',

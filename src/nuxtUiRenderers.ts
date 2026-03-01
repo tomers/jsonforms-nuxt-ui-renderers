@@ -78,6 +78,37 @@ const isMultiEnumControl = (
   return isEnumSchema(resolvedItems as any)
 }
 
+/** Matches oneOf: [{ const, title? }, ...] - enum-like schema with display labels. */
+const isOneOfEnumControl = (
+  uischema: unknown,
+  schema: unknown,
+  context: unknown,
+): boolean => {
+  if (!uiTypeIs('Control')(uischema as any, schema as any, context as any)) {
+    return false
+  }
+
+  const scope = (uischema as any)?.scope
+  if (typeof scope !== 'string') return false
+
+  const rootSchema = (context as any)?.rootSchema ?? (schema as any)
+  let resolved: any
+  try {
+    resolved = Resolve.schema(schema as any, scope, rootSchema)
+  } catch {
+    return false
+  }
+
+  const oneOf = resolved?.oneOf
+  if (!Array.isArray(oneOf) || oneOf.length === 0) return false
+
+  for (const entry of oneOf) {
+    if (typeof entry !== 'object' || entry === null) continue
+    if (!('const' in (entry as Record<string, unknown>))) return false
+  }
+  return true
+}
+
 export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
   // Layouts
   {
@@ -136,6 +167,11 @@ export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
     // Multi-enum must outrank generic array renderer and string renderer.
     tester: rankWith(ENUM_RANK, isMultiEnumControl),
     renderer: markRaw(NuxtUiMultiEnumControl),
+  },
+  {
+    // oneOf with const+title (display labels) - same as enum for rendering.
+    tester: rankWith(ENUM_RANK, isOneOfEnumControl),
+    renderer: markRaw(NuxtUiEnumControl),
   },
   {
     // Enum must outrank the generic string control, otherwise enums can render
