@@ -66,18 +66,50 @@ This package is intentionally small and opinionated: it ships a **single** rende
 
 ## Theming
 
-The package uses semantic class names (`jf-*`) for layout and typography. Override via:
+The package uses semantic class names (`jf-*`) for layout and typography. Two ways to customize:
 
-1. **CSS variables** – Customize defaults by overriding variables in `:root` (see `styles.css`).
-2. **Theme overrides** – Pass custom classes to `createNuxtUiRenderers`:
+### Option 1: Default styles + CSS variables
+
+Import the default stylesheet and override variables in your app:
+
+```ts
+import 'jsonforms-nuxt-ui-renderers/styles.css'
+```
+
+CSS variables (in `styles.css`) you can override in `:root`:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `--jf-panel-border` | `1px solid rgba(0,0,0,0.06)` | Panel border |
+| `--jf-panel-border-radius` | `0.25rem` | Panel corner radius |
+| `--jf-panel-padding` | `0.75rem` | Panel padding |
+| `--jf-gap` | `0.75rem` | Layout gap |
+| `--jf-gap-wide` | `1.5rem` | Wide layout gap |
+| `--jf-label-section-size` | `0.875rem` | Label font size |
+| `--jf-label-section-weight` | `600` | Label font weight |
+| `--jf-text-muted-color` | `rgb(107 114 128)` | Muted text (light) |
+| `--jf-text-muted-color-dark` | `rgb(156 163 175)` | Muted text (dark) |
+| `--jf-text-item-title-color` | `rgb(55 65 81)` | Item title (light) |
+| `--jf-text-item-title-color-dark` | `rgb(229 231 235)` | Item title (dark) |
+| `--jf-text-label-color` | `rgb(75 85 99)` | Label (light) |
+| `--jf-text-label-color-dark` | `rgb(209 213 219)` | Label (dark) |
+
+### Option 2: Theme overrides (e.g. Tailwind)
+
+Pass custom classes to match your app. You can omit `styles.css` when using full overrides:
 
 ```ts
 import { createNuxtUiRenderers } from 'jsonforms-nuxt-ui-renderers'
 
 const renderers = createNuxtUiRenderers({
   theme: {
-    panel: 'rounded border border-gray-200 p-3',  // Tailwind
+    panel: 'rounded border border-default bg-muted/40 p-3',
+    groupNested: 'rounded bg-muted/20 p-3',
     layoutVertical: 'flex flex-col gap-3',
+    layoutHorizontal: 'flex flex-col gap-3 md:flex-row md:flex-wrap',
+    labelSection: 'text-sm font-semibold',
+    textMuted: 'text-sm text-muted',
+    // ... see NuxtUiRenderersTheme for all keys
   },
 })
 ```
