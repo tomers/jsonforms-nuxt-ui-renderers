@@ -2,7 +2,10 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 import { JsonForms } from '@jsonforms/vue'
 
-import { nuxtUiRenderers } from '../src/nuxtUiRenderers'
+import {
+  createNuxtUiRenderers,
+  nuxtUiRenderers,
+} from '../src/nuxtUiRenderers'
 import { UiStubs } from './stubs'
 
 describe('jsonforms-nuxt-ui-renderers', () => {
@@ -320,6 +323,104 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     await addBtn.trigger('click')
     // after adding one object item, we expect one nested input
     expect(wrapper.findAll('input').length).toBe(1)
+  })
+
+  describe('theme overrides', () => {
+    it('uses semantic classes by default (jf-panel for top-level Group)', () => {
+      const schema = {
+        type: 'object',
+        properties: { name: { type: 'string' } },
+      }
+      const uischema = {
+        type: 'Group',
+        label: 'Test group',
+        elements: [
+          { type: 'Control', scope: '#/properties/name', label: 'Name' },
+        ],
+      }
+
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema,
+          uischema,
+          data: { name: 'x' },
+          renderers: nuxtUiRenderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      const groupEl = wrapper.find('.jf-panel')
+      expect(groupEl.exists()).toBe(true)
+      expect(groupEl.text()).toContain('Test group')
+    })
+
+    it('createNuxtUiRenderers applies theme overrides to Group panel', () => {
+      const customRenderers = createNuxtUiRenderers({
+        theme: { panel: 'custom-panel-class' },
+      })
+
+      const schema = {
+        type: 'object',
+        properties: { name: { type: 'string' } },
+      }
+      const uischema = {
+        type: 'Group',
+        label: 'Custom themed',
+        elements: [
+          { type: 'Control', scope: '#/properties/name', label: 'Name' },
+        ],
+      }
+
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema,
+          uischema,
+          data: { name: 'x' },
+          renderers: customRenderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      expect(wrapper.find('.jf-panel').exists()).toBe(false)
+      const customEl = wrapper.find('.custom-panel-class')
+      expect(customEl.exists()).toBe(true)
+      expect(customEl.text()).toContain('Custom themed')
+    })
+
+    it('createNuxtUiRenderers applies theme overrides to array item panels', () => {
+      const customRenderers = createNuxtUiRenderers({
+        theme: { panel: 'my-array-item-panel' },
+      })
+
+      const schema = {
+        type: 'object',
+        properties: {
+          items: {
+            type: 'array',
+            items: { type: 'object', properties: { x: { type: 'string' } } },
+          },
+        },
+      }
+      const uischema = {
+        type: 'Control',
+        scope: '#/properties/items',
+        label: 'Items',
+        options: { detail: 'GENERATE' },
+      }
+
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema,
+          uischema,
+          data: { items: [{ x: 'a' }] },
+          renderers: customRenderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      expect(wrapper.find('.my-array-item-panel').exists()).toBe(true)
+      expect(wrapper.find('.jf-panel').exists()).toBe(false)
+    })
   })
 })
 

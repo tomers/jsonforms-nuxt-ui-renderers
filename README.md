@@ -18,9 +18,12 @@ Nuxt UI should be installed/configured in your Nuxt app (see Nuxt UI docs).
 ```ts
 import { JsonForms } from '@jsonforms/vue'
 import { nuxtUiRenderers } from 'jsonforms-nuxt-ui-renderers'
+import 'jsonforms-nuxt-ui-renderers/styles.css'
 
 // <JsonForms :schema="schema" :uischema="uischema" :data="data" :renderers="nuxtUiRenderers" />
 ```
+
+Import `styles.css` for default styling of layout panels, labels, and typography. The package uses semantic class names (`jf-*`) and does not depend on Tailwind or any specific CSS framework.
 
 ### Important
 
@@ -60,6 +63,26 @@ This package is intentionally small and opinionated: it ships a **single** rende
 - **Objects**: object controls delegate to a **detail UI schema**
   - If no matching detail UI schema is registered, a default one is generated via JSONForms `Generate.uiSchema(...)`
   - The root object is rendered as a `VerticalLayout`; nested objects default to a `Group` using the control’s label
+
+## Theming
+
+The package uses semantic class names (`jf-*`) for layout and typography. Override via:
+
+1. **CSS variables** – Customize defaults by overriding variables in `:root` (see `styles.css`).
+2. **Theme overrides** – Pass custom classes to `createNuxtUiRenderers`:
+
+```ts
+import { createNuxtUiRenderers } from 'jsonforms-nuxt-ui-renderers'
+
+const renderers = createNuxtUiRenderers({
+  theme: {
+    panel: 'rounded border border-gray-200 p-3',  // Tailwind
+    layoutVertical: 'flex flex-col gap-3',
+  },
+})
+```
+
+Theme keys: `panel`, `groupNested`, `layoutVertical`, `layoutVerticalWide`, `layoutHorizontal`, `layoutHorizontalItem`, `arrayItemToolbar`, `labelSection`, `labelSectionSpaced`, `textMuted`, `textMutedXs`, `textItemTitle`, `textItemSuffix`, `textLabel`, `flexBetween`, `flexBetweenStart`, `flexActions`.
 
 ## Contributing
 

@@ -1,0 +1,175 @@
+/**
+ * Default styles for jsonforms-nuxt-ui-renderers.
+ * Uses semantic class names (jf-*). Override CSS variables to customize.
+ *
+ * Usage: import 'jsonforms-nuxt-ui-renderers/styles.css'
+ * Or use your own styles targeting .jf-* classes.
+ */
+
+:root {
+  --jf-panel-border: 1px solid rgba(0, 0, 0, 0.06);
+  --jf-panel-border-radius: 0.25rem;
+  --jf-panel-padding: 0.75rem;
+  --jf-gap: 0.75rem;
+  --jf-gap-wide: 1.5rem;
+  --jf-label-section-size: 0.875rem;
+  --jf-label-section-weight: 600;
+  --jf-text-muted-color: rgb(107 114 128);
+  --jf-text-muted-color-dark: rgb(156 163 175);
+  --jf-text-item-title-color: rgb(55 65 81);
+  --jf-text-item-title-color-dark: rgb(229 231 235);
+  --jf-text-label-color: rgb(75 85 99);
+  --jf-text-label-color-dark: rgb(209 213 219);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --jf-panel-border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+}
+
+/* Panel - bordered container */
+.jf-panel {
+  border: var(--jf-panel-border);
+  border-radius: var(--jf-panel-border-radius);
+  padding: var(--jf-panel-padding);
+}
+
+/* Nested group - padding only */
+.jf-group {
+  padding: var(--jf-panel-padding);
+}
+
+/* Layouts */
+.jf-layout-vertical {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jf-gap);
+}
+
+.jf-layout-vertical-wide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jf-gap-wide);
+}
+
+.jf-layout-horizontal {
+  display: flex;
+  flex-direction: column;
+  gap: var(--jf-gap);
+}
+
+@media (min-width: 768px) {
+  .jf-layout-horizontal {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.jf-layout-horizontal-item {
+  min-width: 0;
+  flex: 1 1 0%;
+}
+
+.jf-min-w-0 {
+  min-width: 0;
+}
+
+.jf-array-item-toolbar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--jf-gap);
+  margin-bottom: var(--jf-gap);
+}
+
+/* Labels */
+.jf-label-section {
+  font-size: var(--jf-label-section-size);
+  font-weight: var(--jf-label-section-weight);
+}
+
+.jf-label-section-spaced {
+  font-size: var(--jf-label-section-size);
+  font-weight: var(--jf-label-section-weight);
+  margin-bottom: var(--jf-gap);
+}
+
+/* Text */
+.jf-text-muted {
+  font-size: var(--jf-label-section-size);
+  color: var(--jf-text-muted-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .jf-text-muted {
+    color: var(--jf-text-muted-color-dark);
+  }
+}
+
+.jf-text-muted-xs {
+  font-size: 0.75rem;
+  color: var(--jf-text-muted-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .jf-text-muted-xs {
+    color: var(--jf-text-muted-color-dark);
+  }
+}
+
+.jf-text-item-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--jf-text-item-title-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .jf-text-item-title {
+    color: var(--jf-text-item-title-color-dark);
+  }
+}
+
+.jf-text-item-suffix {
+  font-weight: 400;
+  color: var(--jf-text-muted-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .jf-text-item-suffix {
+    color: var(--jf-text-muted-color-dark);
+  }
+}
+
+.jf-text-label {
+  font-size: var(--jf-label-section-size);
+  color: var(--jf-text-label-color);
+}
+
+@media (prefers-color-scheme: dark) {
+  .jf-text-label {
+    color: var(--jf-text-label-color-dark);
+  }
+}
+
+/* Flex */
+.jf-flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--jf-gap);
+}
+
+.jf-flex-between-start {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--jf-gap);
+}
+
+.jf-flex-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.25rem;
+}

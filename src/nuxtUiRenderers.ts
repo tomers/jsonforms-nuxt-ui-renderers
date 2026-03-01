@@ -17,9 +17,9 @@ import {
 } from '@jsonforms/core'
 import { markRaw } from 'vue'
 
-import { NuxtUiArrayListRenderer } from './renderers/complex/NuxtUiArrayListRenderer'
+import { createNuxtUiArrayListRenderer } from './renderers/complex/NuxtUiArrayListRenderer'
 import { NuxtUiObjectRenderer } from './renderers/complex/NuxtUiObjectRenderer'
-import { NuxtUiBooleanControl } from './renderers/controls/NuxtUiBooleanControl'
+import { createNuxtUiBooleanControl } from './renderers/controls/NuxtUiBooleanControl'
 import { NuxtUiEnumControl } from './renderers/controls/NuxtUiEnumControl'
 import { NuxtUiIntegerControl } from './renderers/controls/NuxtUiIntegerControl'
 import { NuxtUiMultiEnumControl } from './renderers/controls/NuxtUiMultiEnumControl'
@@ -27,12 +27,16 @@ import { NuxtUiNumberControl } from './renderers/controls/NuxtUiNumberControl'
 import { NuxtUiPasswordControl } from './renderers/controls/NuxtUiPasswordControl'
 import { NuxtUiStringControl } from './renderers/controls/NuxtUiStringControl'
 import { NuxtUiTextareaControl } from './renderers/controls/NuxtUiTextareaControl'
-import { NuxtUiCategorizationRenderer } from './renderers/layouts/NuxtUiCategorizationRenderer'
-import { NuxtUiCategoryRenderer } from './renderers/layouts/NuxtUiCategoryRenderer'
-import { NuxtUiGroupRenderer } from './renderers/layouts/NuxtUiGroupRenderer'
-import { NuxtUiHorizontalLayoutRenderer } from './renderers/layouts/NuxtUiHorizontalLayoutRenderer'
-import { NuxtUiLabelRenderer } from './renderers/layouts/NuxtUiLabelRenderer'
-import { NuxtUiVerticalLayoutRenderer } from './renderers/layouts/NuxtUiVerticalLayoutRenderer'
+import { createNuxtUiCategorizationRenderer } from './renderers/layouts/NuxtUiCategorizationRenderer'
+import { createNuxtUiCategoryRenderer } from './renderers/layouts/NuxtUiCategoryRenderer'
+import { createNuxtUiGroupRenderer } from './renderers/layouts/NuxtUiGroupRenderer'
+import { createNuxtUiHorizontalLayoutRenderer } from './renderers/layouts/NuxtUiHorizontalLayoutRenderer'
+import { createNuxtUiLabelRenderer } from './renderers/layouts/NuxtUiLabelRenderer'
+import { createNuxtUiVerticalLayoutRenderer } from './renderers/layouts/NuxtUiVerticalLayoutRenderer'
+import {
+  mergeTheme,
+  type NuxtUiRenderersTheme,
+} from './renderers/theme'
 
 // Intentionally rank higher than typical defaults.
 const RANK = 10
@@ -109,83 +113,97 @@ const isOneOfEnumControl = (
   return true
 }
 
-export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] = [
-  // Layouts
-  {
-    tester: rankWith(RANK, uiTypeIs('VerticalLayout')),
-    renderer: markRaw(NuxtUiVerticalLayoutRenderer),
-  },
-  {
-    tester: rankWith(RANK, uiTypeIs('HorizontalLayout')),
-    renderer: markRaw(NuxtUiHorizontalLayoutRenderer),
-  },
-  {
-    tester: rankWith(RANK, uiTypeIs('Group')),
-    renderer: markRaw(NuxtUiGroupRenderer),
-  },
-  {
-    tester: rankWith(RANK, uiTypeIs('Categorization')),
-    renderer: markRaw(NuxtUiCategorizationRenderer),
-  },
-  {
-    tester: rankWith(RANK, uiTypeIs('Category')),
-    renderer: markRaw(NuxtUiCategoryRenderer),
-  },
-  {
-    tester: rankWith(RANK, uiTypeIs('Label')),
-    renderer: markRaw(NuxtUiLabelRenderer),
-  },
+export interface CreateNuxtUiRenderersOptions {
+  /** Override theme classes. Use semantic jf-* or custom (Tailwind, etc.). */
+  theme?: Partial<NuxtUiRenderersTheme>
+}
 
-  // Complex schemas
-  {
-    tester: rankWith(RANK, schemaTypeIs('array')),
-    renderer: markRaw(NuxtUiArrayListRenderer),
-  },
-  {
-    tester: rankWith(RANK, isObjectControl),
-    renderer: markRaw(NuxtUiObjectRenderer),
-  },
+export function createNuxtUiRenderers(
+  options?: CreateNuxtUiRenderersOptions,
+): JsonFormsRendererRegistryEntry[] {
+  const theme = mergeTheme(options?.theme)
 
-  // Primitive controls
-  {
-    tester: rankWith(RANK, isMultiLineControl),
-    renderer: markRaw(NuxtUiTextareaControl),
-  },
-  {
-    tester: rankWith(RANK, isNumberControl),
-    renderer: markRaw(NuxtUiNumberControl),
-  },
-  {
-    tester: rankWith(RANK, isIntegerControl),
-    renderer: markRaw(NuxtUiIntegerControl),
-  },
-  {
-    tester: rankWith(RANK, isBooleanControl),
-    renderer: markRaw(NuxtUiBooleanControl),
-  },
-  {
-    // Multi-enum must outrank generic array renderer and string renderer.
-    tester: rankWith(ENUM_RANK, isMultiEnumControl),
-    renderer: markRaw(NuxtUiMultiEnumControl),
-  },
-  {
-    // oneOf with const+title (display labels) - same as enum for rendering.
-    tester: rankWith(ENUM_RANK, isOneOfEnumControl),
-    renderer: markRaw(NuxtUiEnumControl),
-  },
-  {
-    // Enum must outrank the generic string control, otherwise enums can render
-    // as freeform text inputs.
-    tester: rankWith(ENUM_RANK, isEnumControl),
-    renderer: markRaw(NuxtUiEnumControl),
-  },
-  {
-    tester: rankWith(PASSWORD_RANK, and(isStringControl, formatIs('password'))),
-    renderer: markRaw(NuxtUiPasswordControl),
-  },
-  {
-    tester: rankWith(RANK, isStringControl),
-    renderer: markRaw(NuxtUiStringControl),
-  },
-]
+  return [
+    // Layouts
+    {
+      tester: rankWith(RANK, uiTypeIs('VerticalLayout')),
+      renderer: markRaw(createNuxtUiVerticalLayoutRenderer(theme)),
+    },
+    {
+      tester: rankWith(RANK, uiTypeIs('HorizontalLayout')),
+      renderer: markRaw(createNuxtUiHorizontalLayoutRenderer(theme)),
+    },
+    {
+      tester: rankWith(RANK, uiTypeIs('Group')),
+      renderer: markRaw(createNuxtUiGroupRenderer(theme)),
+    },
+    {
+      tester: rankWith(RANK, uiTypeIs('Categorization')),
+      renderer: markRaw(createNuxtUiCategorizationRenderer(theme)),
+    },
+    {
+      tester: rankWith(RANK, uiTypeIs('Category')),
+      renderer: markRaw(createNuxtUiCategoryRenderer(theme)),
+    },
+    {
+      tester: rankWith(RANK, uiTypeIs('Label')),
+      renderer: markRaw(createNuxtUiLabelRenderer(theme)),
+    },
 
+    // Complex schemas
+    {
+      tester: rankWith(RANK, schemaTypeIs('array')),
+      renderer: markRaw(createNuxtUiArrayListRenderer(theme)),
+    },
+    {
+      tester: rankWith(RANK, isObjectControl),
+      renderer: markRaw(NuxtUiObjectRenderer),
+    },
+
+    // Primitive controls
+    {
+      tester: rankWith(RANK, isMultiLineControl),
+      renderer: markRaw(NuxtUiTextareaControl),
+    },
+    {
+      tester: rankWith(RANK, isNumberControl),
+      renderer: markRaw(NuxtUiNumberControl),
+    },
+    {
+      tester: rankWith(RANK, isIntegerControl),
+      renderer: markRaw(NuxtUiIntegerControl),
+    },
+    {
+      tester: rankWith(RANK, isBooleanControl),
+      renderer: markRaw(createNuxtUiBooleanControl(theme)),
+    },
+    {
+      // Multi-enum must outrank generic array renderer and string renderer.
+      tester: rankWith(ENUM_RANK, isMultiEnumControl),
+      renderer: markRaw(NuxtUiMultiEnumControl),
+    },
+    {
+      // oneOf with const+title (display labels) - same as enum for rendering.
+      tester: rankWith(ENUM_RANK, isOneOfEnumControl),
+      renderer: markRaw(NuxtUiEnumControl),
+    },
+    {
+      // Enum must outrank the generic string control, otherwise enums render
+      // as freeform text inputs.
+      tester: rankWith(ENUM_RANK, isEnumControl),
+      renderer: markRaw(NuxtUiEnumControl),
+    },
+    {
+      tester: rankWith(PASSWORD_RANK, and(isStringControl, formatIs('password'))),
+      renderer: markRaw(NuxtUiPasswordControl),
+    },
+    {
+      tester: rankWith(RANK, isStringControl),
+      renderer: markRaw(NuxtUiStringControl),
+    },
+  ]
+}
+
+/** Default renderers with semantic theme. Import styles.css for default styling. */
+export const nuxtUiRenderers: JsonFormsRendererRegistryEntry[] =
+  createNuxtUiRenderers()
