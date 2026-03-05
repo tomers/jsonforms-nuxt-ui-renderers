@@ -2,7 +2,7 @@ import type { ControlElement } from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
 import { computed, defineComponent, h, ref, resolveComponent } from 'vue'
 
-import { trimmedOrUndefined } from '../util'
+import { controlDescription, trimmedOrUndefined } from '../util'
 
 export const NuxtUiPasswordControl = defineComponent({
   name: 'NuxtUiPasswordControl',
@@ -31,7 +31,7 @@ export const NuxtUiPasswordControl = defineComponent({
           UFormField as any,
           {
             label: control.value.label,
-            description: control.value.description,
+            description: controlDescription(control.value),
             required: control.value.required,
             error: errorMessage.value,
           },
@@ -77,4 +77,3 @@ export const NuxtUiPasswordControl = defineComponent({
     }
   },
 })
-

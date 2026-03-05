@@ -5,6 +5,20 @@ export function trimmedOrUndefined(input: string | undefined): string | undefine
   return v ? v : undefined
 }
 
+/**
+ * Resolves the control's description for the label/field.
+ * Uses control.description when set, otherwise falls back to schema.description.
+ */
+export function controlDescription(control: {
+  description?: string
+  schema?: { description?: string }
+}): string | undefined {
+  const d = control.description?.trim()
+  if (d) return d
+  const sd = (control.schema as { description?: string } | undefined)?.description
+  return typeof sd === 'string' && sd.trim() ? sd.trim() : undefined
+}
+
 export function errorFromControl(
   control: ComputedRef<{ errors: string }>,
 ): ComputedRef<string | undefined> {

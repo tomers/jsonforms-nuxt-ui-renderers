@@ -3,6 +3,7 @@ export {
   nuxtUiRenderers,
 } from './nuxtUiRenderers'
 export type { CreateNuxtUiRenderersOptions } from './nuxtUiRenderers'
+export { controlDescription } from './renderers/util'
 export type { JsonFormsRendererRegistryEntry } from '@jsonforms/core'
 export {
   defaultTheme,

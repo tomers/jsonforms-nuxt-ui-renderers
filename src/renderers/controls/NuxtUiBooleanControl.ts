@@ -3,7 +3,7 @@ import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
 import type { NuxtUiRenderersTheme } from '../theme'
 import { computed, defineComponent, h, resolveComponent } from 'vue'
 
-import { trimmedOrUndefined } from '../util'
+import { controlDescription, trimmedOrUndefined } from '../util'
 
 export function createNuxtUiBooleanControl(theme: NuxtUiRenderersTheme) {
   return defineComponent({
@@ -34,7 +34,7 @@ export function createNuxtUiBooleanControl(theme: NuxtUiRenderersTheme) {
             UFormField as any,
             {
               label: control.value.label,
-              description: control.value.description,
+              description: controlDescription(control.value),
               required: control.value.required,
               error: errorMessage.value,
             },

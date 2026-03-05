@@ -2,7 +2,7 @@ import type { ControlElement } from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
 import { computed, defineComponent, h, resolveComponent } from 'vue'
 
-import { trimmedOrUndefined } from '../util'
+import { controlDescription, trimmedOrUndefined } from '../util'
 
 export const NuxtUiNumberControl = defineComponent({
   name: 'NuxtUiNumberControl',
@@ -42,7 +42,7 @@ export const NuxtUiNumberControl = defineComponent({
           UFormField as any,
           {
             label: control.value.label,
-            description: control.value.description,
+            description: controlDescription(control.value),
             required: control.value.required,
             error: errorMessage.value,
           },

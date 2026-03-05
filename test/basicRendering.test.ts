@@ -283,6 +283,68 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     await wrapper.vm.$nextTick()
   })
 
+  it('renders schema description in form field', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        email: { type: 'string', description: 'Your email address' },
+      },
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/email',
+      label: 'Email',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: {},
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const field = wrapper.find('[data-uformfield="Email"]')
+    expect(field.exists()).toBe(true)
+    expect(field.attributes('data-description')).toBe('Your email address')
+  })
+
+  it('renders control without description when schema has none', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+      },
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/name',
+      label: 'Name',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: {},
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const field = wrapper.find('[data-uformfield="Name"]')
+    expect(field.exists()).toBe(true)
+    expect(field.attributes('data-description')).toBe('')
+  })
+
   it('renders an array control and can add an item', async () => {
     const schema = {
       type: 'object',
@@ -423,4 +485,3 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     })
   })
 })
-

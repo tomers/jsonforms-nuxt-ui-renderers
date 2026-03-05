@@ -7,7 +7,7 @@ import {
   resolveComponent,
 } from 'vue'
 
-import { trimmedOrUndefined } from '../util'
+import { controlDescription, trimmedOrUndefined } from '../util'
 
 export const NuxtUiStringControl = defineComponent({
   name: 'NuxtUiStringControl',
@@ -32,7 +32,7 @@ export const NuxtUiStringControl = defineComponent({
           UFormField as any,
           {
             label: control.value.label,
-            description: control.value.description,
+            description: controlDescription(control.value),
             required: control.value.required,
             error: errorMessage.value,
           },

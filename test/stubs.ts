@@ -15,6 +15,7 @@ export const UiStubs = {
           'div',
           {
             'data-uformfield': props.label,
+            'data-description': props.description ?? '',
             'data-error': props.error ?? '',
           },
           slots.default ? slots.default() : [],
@@ -132,4 +133,3 @@ export const UiStubs = {
     },
   }),
 }
-
