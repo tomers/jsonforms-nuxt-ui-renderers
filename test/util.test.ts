@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { controlDescription } from '../src/renderers/util'
+import {
+  controlDescription,
+  getDocsPathFromSchema,
+} from '../src/renderers/util'
 
 describe('controlDescription', () => {
   it('returns control.description when set', () => {
@@ -58,5 +61,36 @@ describe('controlDescription', () => {
         schema: { description: 123 as unknown as string },
       }),
     ).toBeUndefined()
+  })
+})
+
+describe('getDocsPathFromSchema', () => {
+  it('returns path when x-docs-path is valid', () => {
+    expect(
+      getDocsPathFromSchema({
+        type: 'string',
+        'x-docs-path': '/docs/integrations/waveshare/#hardware-device-id-required',
+      }),
+    ).toBe('/docs/integrations/waveshare/#hardware-device-id-required')
+  })
+
+  it('returns null when x-docs-path is absent', () => {
+    expect(getDocsPathFromSchema({ type: 'string' })).toBeNull()
+    expect(getDocsPathFromSchema({})).toBeNull()
+  })
+
+  it('returns null when x-docs-path does not start with /', () => {
+    expect(
+      getDocsPathFromSchema({ type: 'string', 'x-docs-path': 'relative' }),
+    ).toBeNull()
+    expect(
+      getDocsPathFromSchema({ type: 'string', 'x-docs-path': 'https://example.com' }),
+    ).toBeNull()
+  })
+
+  it('returns null for invalid schema', () => {
+    expect(getDocsPathFromSchema(null)).toBeNull()
+    expect(getDocsPathFromSchema(undefined)).toBeNull()
+    expect(getDocsPathFromSchema([])).toBeNull()
   })
 })

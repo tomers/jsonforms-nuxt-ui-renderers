@@ -25,7 +25,7 @@ import { NuxtUiIntegerControl } from './renderers/controls/NuxtUiIntegerControl'
 import { NuxtUiMultiEnumControl } from './renderers/controls/NuxtUiMultiEnumControl'
 import { NuxtUiNumberControl } from './renderers/controls/NuxtUiNumberControl'
 import { NuxtUiPasswordControl } from './renderers/controls/NuxtUiPasswordControl'
-import { NuxtUiStringControl } from './renderers/controls/NuxtUiStringControl'
+import { createNuxtUiStringControl } from './renderers/controls/NuxtUiStringControl'
 import { NuxtUiTextareaControl } from './renderers/controls/NuxtUiTextareaControl'
 import { createNuxtUiCategorizationRenderer } from './renderers/layouts/NuxtUiCategorizationRenderer'
 import { createNuxtUiCategoryRenderer } from './renderers/layouts/NuxtUiCategoryRenderer'
@@ -116,12 +116,18 @@ const isOneOfEnumControl = (
 export interface CreateNuxtUiRenderersOptions {
   /** Override theme classes. Use semantic jf-* or custom (Tailwind, etc.). */
   theme?: Partial<NuxtUiRenderersTheme>
+  /**
+   * Build full docs URL from schema x-docs-path.
+   * When provided, controls with x-docs-path show a docs link next to the label.
+   */
+  docsUrl?: (path: string) => string
 }
 
 export function createNuxtUiRenderers(
   options?: CreateNuxtUiRenderersOptions,
 ): JsonFormsRendererRegistryEntry[] {
   const theme = mergeTheme(options?.theme)
+  const docsUrl = options?.docsUrl
 
   return [
     // Layouts
@@ -199,7 +205,7 @@ export function createNuxtUiRenderers(
     },
     {
       tester: rankWith(RANK, isStringControl),
-      renderer: markRaw(NuxtUiStringControl),
+      renderer: markRaw(createNuxtUiStringControl(docsUrl)),
     },
   ]
 }

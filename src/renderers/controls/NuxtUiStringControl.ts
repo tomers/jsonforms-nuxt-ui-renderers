@@ -7,50 +7,66 @@ import {
   resolveComponent,
 } from 'vue'
 
-import { controlDescription, trimmedOrUndefined } from '../util'
+import {
+  controlDescription,
+  renderDocsHintSlot,
+  trimmedOrUndefined,
+} from '../util'
 
-export const NuxtUiStringControl = defineComponent({
-  name: 'NuxtUiStringControl',
-  props: rendererProps<ControlElement>(),
-  setup(props) {
-    const { control, handleChange } = useJsonFormsControl(
-      props as unknown as Parameters<typeof useJsonFormsControl>[0],
-    )
+export function createNuxtUiStringControl(
+  docsUrl?: (path: string) => string,
+) {
+  return defineComponent({
+    name: 'NuxtUiStringControl',
+    props: rendererProps<ControlElement>(),
+    setup(props) {
+      const { control, handleChange } = useJsonFormsControl(
+        props as unknown as Parameters<typeof useJsonFormsControl>[0],
+      )
 
-    const errorMessage = computed(() => trimmedOrUndefined(control.value.errors))
+      const errorMessage = computed(() =>
+        trimmedOrUndefined(control.value.errors),
+      )
 
-    return () => {
-      if (!control.value.visible) return null
+      return () => {
+        if (!control.value.visible) return null
 
-      const UFormField = resolveComponent('UFormField')
-      const UInput = resolveComponent('UInput')
+        const UFormField = resolveComponent('UFormField')
+        const UInput = resolveComponent('UInput')
 
-      return h(
-        'div',
-        {},
-        h(
-          UFormField as any,
-          {
+        const slots: Record<string, () => ReturnType<typeof h>> = {
+          default: () =>
+            h(UInput as any, {
+              modelValue: control.value.data ?? '',
+              class: 'w-full',
+              disabled: !control.value.enabled,
+              color: errorMessage.value ? 'error' : undefined,
+              'aria-invalid': Boolean(errorMessage.value),
+              'onUpdate:modelValue': (v: unknown) =>
+                handleChange(control.value.path, v),
+            }),
+        }
+        const hintSlot = renderDocsHintSlot(
+          control.value.schema,
+          control.value.label ?? '',
+          docsUrl,
+          resolveComponent,
+        )
+        if (hintSlot) slots.hint = hintSlot
+
+        return h(
+          'div',
+          {},
+          h(UFormField as any, {
             label: control.value.label,
             description: controlDescription(control.value),
             required: control.value.required,
             error: errorMessage.value,
-          },
-          {
-            default: () =>
-              h(UInput as any, {
-                modelValue: control.value.data ?? '',
-                class: 'w-full',
-                disabled: !control.value.enabled,
-                color: errorMessage.value ? 'error' : undefined,
-                'aria-invalid': Boolean(errorMessage.value),
-                'onUpdate:modelValue': (v: unknown) =>
-                  handleChange(control.value.path, v),
-              }),
-          },
-        ),
-      )
-    }
-  },
-})
+          }, slots),
+        )
+      }
+    },
+  })
+}
+
 
