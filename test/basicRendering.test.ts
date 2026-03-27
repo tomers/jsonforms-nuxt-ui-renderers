@@ -9,6 +9,71 @@ import {
 import { UiStubs } from './stubs'
 
 describe('jsonforms-nuxt-ui-renderers', () => {
+  it('uses native readonly (not disabled) for schema readOnly string fields', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        discovered_label: { type: 'string', readOnly: true },
+      },
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/discovered_label',
+      label: 'Discovered label',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { discovered_label: 'PalGate device' },
+        renderers: nuxtUiRenderers,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const input = wrapper.find('input')
+    expect(input.exists()).toBe(true)
+    expect((input.element as HTMLInputElement).readOnly).toBe(true)
+    expect((input.element as HTMLInputElement).disabled).toBe(false)
+  })
+
+  it('keeps disabled for schema readOnly when JsonForms readonly mode is on', () => {
+    const schema = {
+      type: 'object',
+      properties: {
+        discovered_label: { type: 'string', readOnly: true },
+      },
+    }
+
+    const uischema = {
+      type: 'Control',
+      scope: '#/properties/discovered_label',
+      label: 'Discovered label',
+    }
+
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema,
+        uischema,
+        data: { discovered_label: 'x' },
+        renderers: nuxtUiRenderers,
+        readonly: true,
+      },
+      global: {
+        components: UiStubs,
+      },
+    })
+
+    const input = wrapper.find('input')
+    expect(input.exists()).toBe(true)
+    expect((input.element as HTMLInputElement).readOnly).toBe(false)
+    expect((input.element as HTMLInputElement).disabled).toBe(true)
+  })
+
   it('renders a string control via Nuxt UI stubs', () => {
     const schema = {
       type: 'object',

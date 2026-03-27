@@ -4,11 +4,13 @@ import {
   computed,
   defineComponent,
   h,
+  inject,
   resolveComponent,
 } from 'vue'
 
 import {
   controlDescription,
+  controlTextInputAttrs,
   renderDocsHintSlot,
   trimmedOrUndefined,
 } from '../util'
@@ -23,6 +25,7 @@ export function createNuxtUiStringControl(
       const { control, handleChange } = useJsonFormsControl(
         props as unknown as Parameters<typeof useJsonFormsControl>[0],
       )
+      const jsonforms = inject<{ readonly?: boolean }>('jsonforms')
 
       const errorMessage = computed(() =>
         trimmedOrUndefined(control.value.errors),
@@ -33,13 +36,18 @@ export function createNuxtUiStringControl(
 
         const UFormField = resolveComponent('UFormField')
         const UInput = resolveComponent('UInput')
+        const { readonly, disabled } = controlTextInputAttrs(
+          control.value,
+          jsonforms,
+        )
 
         const slots: Record<string, () => ReturnType<typeof h>> = {
           default: () =>
             h(UInput as any, {
               modelValue: control.value.data ?? '',
               class: 'w-full',
-              disabled: !control.value.enabled,
+              readonly,
+              disabled,
               color: errorMessage.value ? 'error' : undefined,
               'aria-invalid': Boolean(errorMessage.value),
               'onUpdate:modelValue': (v: unknown) =>

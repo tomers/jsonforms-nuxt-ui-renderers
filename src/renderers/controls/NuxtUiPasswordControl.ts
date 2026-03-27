@@ -1,8 +1,8 @@
 import type { ControlElement } from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
-import { computed, defineComponent, h, ref, resolveComponent } from 'vue'
+import { computed, defineComponent, h, inject, ref, resolveComponent } from 'vue'
 
-import { controlDescription, trimmedOrUndefined } from '../util'
+import { controlDescription, controlTextInputAttrs, trimmedOrUndefined } from '../util'
 
 export const NuxtUiPasswordControl = defineComponent({
   name: 'NuxtUiPasswordControl',
@@ -11,6 +11,7 @@ export const NuxtUiPasswordControl = defineComponent({
     const { control, handleChange } = useJsonFormsControl(
       props as unknown as Parameters<typeof useJsonFormsControl>[0],
     )
+    const jsonforms = inject<{ readonly?: boolean }>('jsonforms')
 
     const errorMessage = computed(() => trimmedOrUndefined(control.value.errors))
     const showPassword = ref(false)
@@ -23,6 +24,7 @@ export const NuxtUiPasswordControl = defineComponent({
       const UFormField = resolveComponent('UFormField')
       const UInput = resolveComponent('UInput')
       const UButton = resolveComponent('UButton')
+      const { readonly, disabled } = controlTextInputAttrs(control.value, jsonforms)
 
       return h(
         'div',
@@ -44,7 +46,8 @@ export const NuxtUiPasswordControl = defineComponent({
                   class: 'w-full',
                   type: inputType.value,
                   autocomplete: 'current-password',
-                  disabled: !control.value.enabled,
+                  readonly,
+                  disabled,
                   color: errorMessage.value ? 'error' : undefined,
                   'aria-invalid': Boolean(errorMessage.value),
                   'onUpdate:modelValue': (v: unknown) =>
@@ -64,7 +67,7 @@ export const NuxtUiPasswordControl = defineComponent({
                       'aria-label': showPassword.value
                         ? 'Hide password'
                         : 'Show password',
-                      disabled: !control.value.enabled,
+                      disabled,
                       onClick: () => {
                         showPassword.value = !showPassword.value
                       },

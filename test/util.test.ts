@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest'
 
 import {
   controlDescription,
+  controlTextInputAttrs,
   getDocsPathFromSchema,
+  isSchemaReadOnly,
 } from '../src/renderers/util'
 
 describe('controlDescription', () => {
@@ -61,6 +63,45 @@ describe('controlDescription', () => {
         schema: { description: 123 as unknown as string },
       }),
     ).toBeUndefined()
+  })
+})
+
+describe('isSchemaReadOnly', () => {
+  it('is true only when readOnly is boolean true', () => {
+    expect(isSchemaReadOnly({ type: 'string', readOnly: true })).toBe(true)
+    expect(isSchemaReadOnly({ type: 'string', readOnly: false })).toBe(false)
+    expect(isSchemaReadOnly({ type: 'string' })).toBe(false)
+    expect(isSchemaReadOnly(null)).toBe(false)
+  })
+})
+
+describe('controlTextInputAttrs', () => {
+  it('uses readonly for pure schema readOnly', () => {
+    expect(
+      controlTextInputAttrs(
+        {
+          enabled: false,
+          schema: { type: 'string', readOnly: true },
+          uischema: { type: 'Control', scope: '#/properties/x' },
+          config: {},
+        },
+        {},
+      ),
+    ).toEqual({ readonly: true, disabled: false })
+  })
+
+  it('uses disabled when JsonForms is in readonly mode', () => {
+    expect(
+      controlTextInputAttrs(
+        {
+          enabled: false,
+          schema: { type: 'string', readOnly: true },
+          uischema: { type: 'Control', scope: '#/properties/x' },
+          config: {},
+        },
+        { readonly: true },
+      ),
+    ).toEqual({ readonly: false, disabled: true })
   })
 })
 

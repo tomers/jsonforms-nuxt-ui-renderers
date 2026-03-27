@@ -28,6 +28,7 @@ export const UiStubs = {
     props: {
       modelValue: { type: String, default: '' },
       disabled: { type: Boolean, default: false },
+      readonly: { type: Boolean, default: false },
       type: { type: String, default: 'text' },
     },
     emits: ['update:modelValue'],
@@ -37,6 +38,7 @@ export const UiStubs = {
           h('input', {
             value: props.modelValue,
             disabled: props.disabled,
+            readOnly: props.readonly,
             type: props.type,
             onInput: (e: Event) => {
               emit('update:modelValue', (e.target as HTMLInputElement).value)
@@ -52,6 +54,7 @@ export const UiStubs = {
     props: {
       modelValue: { type: String, default: '' },
       disabled: { type: Boolean, default: false },
+      readonly: { type: Boolean, default: false },
       rows: { type: Number, default: 3 },
     },
     emits: ['update:modelValue'],
@@ -60,6 +63,7 @@ export const UiStubs = {
         h('textarea', {
           value: props.modelValue,
           disabled: props.disabled,
+          readOnly: props.readonly,
           rows: props.rows,
           onInput: (e: Event) => {
             emit('update:modelValue', (e.target as HTMLTextAreaElement).value)

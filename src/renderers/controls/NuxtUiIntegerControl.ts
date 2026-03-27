@@ -1,8 +1,8 @@
 import type { ControlElement } from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
-import { computed, defineComponent, h, resolveComponent } from 'vue'
+import { computed, defineComponent, h, inject, resolveComponent } from 'vue'
 
-import { controlDescription, trimmedOrUndefined } from '../util'
+import { controlDescription, controlTextInputAttrs, trimmedOrUndefined } from '../util'
 
 export const NuxtUiIntegerControl = defineComponent({
   name: 'NuxtUiIntegerControl',
@@ -11,6 +11,7 @@ export const NuxtUiIntegerControl = defineComponent({
     const { control, handleChange } = useJsonFormsControl(
       props as unknown as Parameters<typeof useJsonFormsControl>[0],
     )
+    const jsonforms = inject<{ readonly?: boolean }>('jsonforms')
 
     const errorMessage = computed(() => trimmedOrUndefined(control.value.errors))
 
@@ -35,6 +36,7 @@ export const NuxtUiIntegerControl = defineComponent({
 
       const UFormField = resolveComponent('UFormField')
       const UInput = resolveComponent('UInput')
+      const { readonly, disabled } = controlTextInputAttrs(control.value, jsonforms)
 
       return h(
         'div',
@@ -54,7 +56,8 @@ export const NuxtUiIntegerControl = defineComponent({
                 inputmode: 'numeric',
                 step: '1',
                 modelValue: modelValue.value,
-                disabled: !control.value.enabled,
+                readonly,
+                disabled,
                 color: errorMessage.value ? 'error' : undefined,
                 'aria-invalid': Boolean(errorMessage.value),
                 'onUpdate:modelValue': onUpdate,
