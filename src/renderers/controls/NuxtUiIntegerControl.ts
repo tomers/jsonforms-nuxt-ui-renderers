@@ -4,6 +4,11 @@ import { computed, defineComponent, h, inject, resolveComponent } from 'vue'
 
 import { controlDescription, controlTextInputAttrs, trimmedOrUndefined } from '../util'
 
+/**
+ * Native `<input type="number">` (not `UInput`) so every `input` event dispatches to JsonForms
+ * immediately. Nuxt UI’s `UInput` integrates with `useFormField` / debounced form events; relying
+ * only on `update:modelValue` can leave parent `:data` out of sync until blur in some setups.
+ */
 export const NuxtUiIntegerControl = defineComponent({
   name: 'NuxtUiIntegerControl',
   props: rendererProps<ControlElement>(),
@@ -20,8 +25,8 @@ export const NuxtUiIntegerControl = defineComponent({
       return v === null || v === undefined ? '' : String(v)
     })
 
-    function onUpdate(raw: unknown) {
-      const trimmed = String(raw ?? '').trim()
+    function applyRawString(raw: string) {
+      const trimmed = raw.trim()
       if (trimmed === '') {
         handleChange(control.value.path, undefined)
         return
@@ -35,7 +40,6 @@ export const NuxtUiIntegerControl = defineComponent({
       if (!control.value.visible) return null
 
       const UFormField = resolveComponent('UFormField')
-      const UInput = resolveComponent('UInput')
       const { readonly, disabled } = controlTextInputAttrs(control.value, jsonforms)
 
       return h(
@@ -51,16 +55,23 @@ export const NuxtUiIntegerControl = defineComponent({
           },
           {
             default: () =>
-              h(UInput as any, {
+              h('input', {
                 type: 'number',
                 inputmode: 'numeric',
                 step: '1',
-                modelValue: modelValue.value,
+                class: [
+                  'jf-input-native',
+                  errorMessage.value ? 'jf-input-native--error' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' '),
+                value: modelValue.value,
                 readonly,
                 disabled,
-                color: errorMessage.value ? 'error' : undefined,
                 'aria-invalid': Boolean(errorMessage.value),
-                'onUpdate:modelValue': onUpdate,
+                onInput: (e: Event) => {
+                  applyRawString((e.target as HTMLInputElement).value)
+                },
               }),
           },
         ),

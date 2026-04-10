@@ -4,6 +4,7 @@ import { computed, defineComponent, h, inject, resolveComponent } from 'vue'
 
 import { controlDescription, controlTextInputAttrs, trimmedOrUndefined } from '../util'
 
+/** See {@link NuxtUiIntegerControl}: native input so each `input` event updates JsonForms core. */
 export const NuxtUiNumberControl = defineComponent({
   name: 'NuxtUiNumberControl',
   props: rendererProps<ControlElement>(),
@@ -20,8 +21,8 @@ export const NuxtUiNumberControl = defineComponent({
       return v === null || v === undefined ? '' : String(v)
     })
 
-    function onUpdate(raw: unknown) {
-      const trimmed = String(raw ?? '').trim()
+    function applyRawString(raw: string) {
+      const trimmed = raw.trim()
       if (trimmed === '') {
         handleChange(control.value.path, undefined)
         return
@@ -34,7 +35,6 @@ export const NuxtUiNumberControl = defineComponent({
       if (!control.value.visible) return null
 
       const UFormField = resolveComponent('UFormField')
-      const UInput = resolveComponent('UInput')
       const { readonly, disabled } = controlTextInputAttrs(control.value, jsonforms)
 
       return h(
@@ -50,15 +50,22 @@ export const NuxtUiNumberControl = defineComponent({
           },
           {
             default: () =>
-              h(UInput as any, {
+              h('input', {
                 type: 'number',
                 inputmode: 'decimal',
-                modelValue: modelValue.value,
+                class: [
+                  'jf-input-native',
+                  errorMessage.value ? 'jf-input-native--error' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' '),
+                value: modelValue.value,
                 readonly,
                 disabled,
-                color: errorMessage.value ? 'error' : undefined,
                 'aria-invalid': Boolean(errorMessage.value),
-                'onUpdate:modelValue': onUpdate,
+                onInput: (e: Event) => {
+                  applyRawString((e.target as HTMLInputElement).value)
+                },
               }),
           },
         ),

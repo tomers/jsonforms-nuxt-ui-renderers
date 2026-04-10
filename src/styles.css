@@ -20,11 +20,19 @@
   --jf-text-item-title-color-dark: rgb(229 231 235);
   --jf-text-label-color: rgb(75 85 99);
   --jf-text-label-color-dark: rgb(209 213 219);
+  /* Native number inputs (integer / number controls) — match typical Nuxt UI field density */
+  --jf-input-border: 1px solid rgba(0, 0, 0, 0.12);
+  --jf-input-border-error: 1px solid rgb(220 38 38);
+  --jf-input-radius: 0.375rem;
+  --jf-input-padding-x: 0.625rem;
+  --jf-input-padding-y: 0.375rem;
+  --jf-input-bg: transparent;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
     --jf-panel-border: 1px solid rgba(255, 255, 255, 0.08);
+    --jf-input-border: 1px solid rgba(255, 255, 255, 0.14);
   }
 }
 
@@ -172,4 +180,32 @@
   flex: none;
   align-items: center;
   gap: 0.25rem;
+}
+
+/* Native `<input type="number">` for integer/number JsonForms controls (see README) */
+.jf-input-native {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  border: var(--jf-input-border);
+  border-radius: var(--jf-input-radius);
+  background: var(--jf-input-bg);
+  padding: var(--jf-input-padding-y) var(--jf-input-padding-x);
+  font: inherit;
+  line-height: 1.5;
+  outline: none;
+}
+
+.jf-input-native:focus-visible {
+  outline: 2px solid rgb(59 130 246);
+  outline-offset: 0;
+}
+
+.jf-input-native:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.jf-input-native--error {
+  border: var(--jf-input-border-error);
 }

@@ -40,8 +40,8 @@ This package is intentionally small and opinionated: it ships a **single** rende
 - **String**: JSON Schema `type: "string"` → `UInput`
 - **Multiline string**: JSONForms “multiline” control (e.g. `uischema.options.multi: true`) → `UTextarea`
 - **Password**: JSON Schema `type: "string"` + `format: "password"` → `UInput type="password"` with show/hide toggle button
-- **Number**: JSON Schema `type: "number"` → `UInput type="number"` (parses to `number`, empty becomes `undefined`)
-- **Integer**: JSON Schema `type: "integer"` → `UInput type="number" step="1"` (parses to `integer`, empty becomes `undefined`)
+- **Number**: JSON Schema `type: "number"` → **native** `<input type="number">` inside `UFormField` (parses to `number`, empty becomes `undefined`). Native inputs are used so each `input` event updates JsonForms core immediately; `UInput` alone could leave parent `:data` stale in some form-field setups.
+- **Integer**: JSON Schema `type: "integer"` → **native** `<input type="number" inputmode="numeric" step="1">` (parses to `integer`, empty becomes `undefined`). Same rationale as number.
 - **Boolean**: JSON Schema `type: "boolean"` → `USwitch`
 - **Enum (single-select)**: JSON Schema `enum: [...]` (or `oneOf: [{ const, title? }, ...]`) → `USelectMenu`
 - **Enum (multi-select)**: JSON Schema `type: "array"` with `items` being an enum schema (supports `$ref`’d `items`) → `USelectMenu multiple`

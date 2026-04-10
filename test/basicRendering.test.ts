@@ -281,7 +281,7 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(wrapper.findAll('input').length).toBe(2)
   })
 
-  it('does not crash when UInput emits a number for integer controls', async () => {
+  it('integer control uses native number input and updates JsonForms data on input', async () => {
     const schema = {
       type: 'object',
       properties: {
@@ -299,7 +299,7 @@ describe('jsonforms-nuxt-ui-renderers', () => {
       props: {
         schema,
         uischema,
-        data: { port: 0 },
+        data: {},
         renderers: nuxtUiRenderers,
       },
       global: {
@@ -307,15 +307,20 @@ describe('jsonforms-nuxt-ui-renderers', () => {
       },
     })
 
-    const uinput = wrapper.findComponent({ name: 'UInput' })
-    expect(uinput.exists()).toBe(true)
+    const input = wrapper.find('input[type="number"]')
+    expect(input.exists()).toBe(true)
 
-    // Nuxt UI can emit numbers for `type="number"`.
-    expect(() => uinput.vm.$emit('update:modelValue', 2)).not.toThrow()
+    await input.setValue('2')
+    await input.trigger('input')
     await wrapper.vm.$nextTick()
+
+    const changes = wrapper.emitted('change') as unknown[][] | undefined
+    expect(changes?.length).toBeGreaterThan(0)
+    const last = changes![changes!.length - 1][0] as { data: { port?: number } }
+    expect(last.data?.port).toBe(2)
   })
 
-  it('does not crash when UInput emits a number for number controls', async () => {
+  it('number control uses native number input and updates JsonForms data on input', async () => {
     const schema = {
       type: 'object',
       properties: {
@@ -333,7 +338,7 @@ describe('jsonforms-nuxt-ui-renderers', () => {
       props: {
         schema,
         uischema,
-        data: { x: 1.5 },
+        data: {},
         renderers: nuxtUiRenderers,
       },
       global: {
@@ -341,11 +346,17 @@ describe('jsonforms-nuxt-ui-renderers', () => {
       },
     })
 
-    const uinput = wrapper.findComponent({ name: 'UInput' })
-    expect(uinput.exists()).toBe(true)
+    const input = wrapper.find('input[type="number"]')
+    expect(input.exists()).toBe(true)
 
-    expect(() => uinput.vm.$emit('update:modelValue', 3.25)).not.toThrow()
+    await input.setValue('3.25')
+    await input.trigger('input')
     await wrapper.vm.$nextTick()
+
+    const changes = wrapper.emitted('change') as unknown[][] | undefined
+    expect(changes?.length).toBeGreaterThan(0)
+    const last = changes![changes!.length - 1][0] as { data: { x?: number } }
+    expect(last.data?.x).toBe(3.25)
   })
 
   it('renders schema description in form field', () => {
