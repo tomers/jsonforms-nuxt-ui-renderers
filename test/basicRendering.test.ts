@@ -316,8 +316,10 @@ describe('jsonforms-nuxt-ui-renderers', () => {
 
     const changes = wrapper.emitted('change') as unknown[][] | undefined
     expect(changes?.length).toBeGreaterThan(0)
-    const last = changes![changes!.length - 1][0] as { data: { port?: number } }
-    expect(last.data?.port).toBe(2)
+    const lastBatch = changes!.at(-1)
+    expect(lastBatch).toBeDefined()
+    const payload = lastBatch![0]! as { data: { port?: number } }
+    expect(payload.data?.port).toBe(2)
   })
 
   it('number control uses native number input and updates JsonForms data on input', async () => {
@@ -355,8 +357,10 @@ describe('jsonforms-nuxt-ui-renderers', () => {
 
     const changes = wrapper.emitted('change') as unknown[][] | undefined
     expect(changes?.length).toBeGreaterThan(0)
-    const last = changes![changes!.length - 1][0] as { data: { x?: number } }
-    expect(last.data?.x).toBe(3.25)
+    const lastBatch = changes!.at(-1)
+    expect(lastBatch).toBeDefined()
+    const payload = lastBatch![0]! as { data: { x?: number } }
+    expect(payload.data?.x).toBe(3.25)
   })
 
   it('renders schema description in form field', () => {
