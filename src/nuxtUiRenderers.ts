@@ -20,7 +20,10 @@ import { markRaw } from 'vue'
 import { createNuxtUiArrayListRenderer } from './renderers/complex/NuxtUiArrayListRenderer'
 import { NuxtUiObjectRenderer } from './renderers/complex/NuxtUiObjectRenderer'
 import { createNuxtUiBooleanControl } from './renderers/controls/NuxtUiBooleanControl'
-import { NuxtUiEnumControl } from './renderers/controls/NuxtUiEnumControl'
+import {
+  createNuxtUiEnumControl,
+  type LocaleDirection,
+} from './renderers/controls/NuxtUiEnumControl'
 import { NuxtUiIntegerControl } from './renderers/controls/NuxtUiIntegerControl'
 import { NuxtUiMultiEnumControl } from './renderers/controls/NuxtUiMultiEnumControl'
 import { NuxtUiNumberControl } from './renderers/controls/NuxtUiNumberControl'
@@ -121,6 +124,8 @@ export interface CreateNuxtUiRenderersOptions {
    * When provided, controls with x-docs-path show a docs link next to the label.
    */
   docsUrl?: (path: string) => string
+  /** Direction to apply to enum option labels; the button-group layout stays LTR. */
+  localeDirection?: LocaleDirection
 }
 
 export function createNuxtUiRenderers(
@@ -128,6 +133,7 @@ export function createNuxtUiRenderers(
 ): JsonFormsRendererRegistryEntry[] {
   const theme = mergeTheme(options?.theme)
   const docsUrl = options?.docsUrl
+  const enumControl = createNuxtUiEnumControl(options?.localeDirection)
 
   return [
     // Layouts
@@ -191,13 +197,13 @@ export function createNuxtUiRenderers(
     {
       // oneOf with const+title (display labels) - same as enum for rendering.
       tester: rankWith(ENUM_RANK, isOneOfEnumControl),
-      renderer: markRaw(NuxtUiEnumControl),
+      renderer: markRaw(enumControl),
     },
     {
       // Enum must outrank the generic string control, otherwise enums render
       // as freeform text inputs.
       tester: rankWith(ENUM_RANK, isEnumControl),
-      renderer: markRaw(NuxtUiEnumControl),
+      renderer: markRaw(enumControl),
     },
     {
       tester: rankWith(PASSWORD_RANK, and(isStringControl, formatIs('password'))),

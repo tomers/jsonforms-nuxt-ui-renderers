@@ -106,11 +106,14 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect((input.element as HTMLInputElement).value).toBe('Alice')
   })
 
-  it('renders an enum control as a select (not a freeform input)', () => {
+  it('keeps enums with more than four options in a select', () => {
     const schema = {
       type: 'object',
       properties: {
-        mode: { type: 'string', enum: ['video', 'video,audio'] },
+        mode: {
+          type: 'string',
+          enum: ['video', 'video,audio', 'audio', 'data', 'other'],
+        },
       },
       required: ['mode'],
     }
@@ -134,8 +137,126 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     })
 
     expect(wrapper.findComponent({ name: 'USelectMenu' }).exists()).toBe(true)
+    expect(wrapper.findComponent({ name: 'UFieldGroup' }).exists()).toBe(false)
     // Ensure the generic string renderer didn't win.
     expect(wrapper.find('input').exists()).toBe(false)
+  })
+
+  it('renders enums with two through four options as button groups', () => {
+    for (const values of [
+      ['small', 'large'],
+      ['small', 'medium', 'large', 'extra-large'],
+    ]) {
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema: {
+            type: 'object',
+            properties: { size: { type: 'string', enum: values } },
+          },
+          uischema: {
+            type: 'Control',
+            scope: '#/properties/size',
+            label: 'Size',
+          },
+          data: { size: values[0] },
+          renderers: nuxtUiRenderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      expect(wrapper.findComponent({ name: 'UFieldGroup' }).exists()).toBe(true)
+      expect(wrapper.findComponent({ name: 'USelectMenu' }).exists()).toBe(false)
+      expect(wrapper.findAll('button')).toHaveLength(values.length)
+      expect(wrapper.find('button').attributes('aria-pressed')).toBe('true')
+      wrapper.unmount()
+    }
+  })
+
+  it.each(['ltr', 'rtl'] as const)(
+    'keeps the button group LTR while option labels use %s direction',
+    (localeDirection) => {
+      const renderers = createNuxtUiRenderers({ localeDirection })
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema: {
+            type: 'object',
+            properties: {
+              choice: {
+                type: 'string',
+                oneOf: [
+                  { const: 'first', title: 'First option' },
+                  { const: 'second', title: 'Second option' },
+                ],
+              },
+            },
+          },
+          uischema: {
+            type: 'Control',
+            scope: '#/properties/choice',
+            label: 'Choice label',
+          },
+          data: { choice: 'first' },
+          renderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      const group = wrapper.findComponent({ name: 'UFieldGroup' })
+      expect(group.attributes('dir')).toBe('ltr')
+      expect(group.attributes('aria-label')).toBe('Choice label')
+      expect(
+        wrapper.findAll('button span').map((span) => span.attributes('dir')),
+      ).toEqual([localeDirection, localeDirection])
+      expect(wrapper.findAll('button')[0]?.attributes('aria-pressed')).toBe('true')
+      expect(wrapper.findAll('button')[1]?.attributes('aria-pressed')).toBe('false')
+    },
+  )
+
+  it('updates selection and disables small-enum buttons in readonly mode', async () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: { mode: { type: 'string', enum: ['first', 'second'] } },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/mode',
+          label: 'Mode',
+        },
+        data: { mode: 'first' },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    await wrapper.findAll('button')[1]?.trigger('click')
+    expect(wrapper.findAll('button')[0]?.attributes('aria-pressed')).toBe('false')
+    expect(wrapper.findAll('button')[1]?.attributes('aria-pressed')).toBe('true')
+    wrapper.unmount()
+
+    const readonlyWrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: { mode: { type: 'string', enum: ['first', 'second'] } },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/mode',
+          label: 'Mode',
+        },
+        data: { mode: 'first' },
+        renderers: nuxtUiRenderers,
+        readonly: true,
+      },
+      global: { components: UiStubs },
+    })
+    expect(
+      readonlyWrapper
+        .findAll('button')
+        .every((button) => (button.element as HTMLButtonElement).disabled),
+    ).toBe(true)
   })
 
   it('renders a oneOf enum control as a select (not a freeform input)', () => {
@@ -148,6 +269,8 @@ describe('jsonforms-nuxt-ui-renderers', () => {
             { const: 'hikvision', title: 'Hikvision / HiWatch' },
             { const: 'dahua', title: 'Dahua / Amcrest / Lorex' },
             { const: 'custom', title: 'Custom' },
+            { const: 'axis', title: 'Axis' },
+            { const: 'other', title: 'Other' },
           ],
           default: 'hikvision',
         },

@@ -27,7 +27,7 @@ Import `styles.css` for default styling of layout panels, labels, and typography
 
 ### Important
 
-- These renderers **resolve Nuxt UI components by name** (e.g. `UFormField`, `UInput`, `UTextarea`, `USelectMenu`, `USwitch`, `UButton`).
+- These renderers **resolve Nuxt UI components by name** (e.g. `UFormField`, `UInput`, `UTextarea`, `USelectMenu`, `UFieldGroup`, `USwitch`, `UButton`).
   Your app must register Nuxt UI components globally (Nuxt does this when you use the `@nuxt/ui` module).
 - If you override component names or use a different UI library, these renderers will not work out of the box.
 
@@ -43,7 +43,7 @@ This package is intentionally small and opinionated: it ships a **single** rende
 - **Number**: JSON Schema `type: "number"` → **native** `<input type="number">` inside `UFormField` (parses to `number`, empty becomes `undefined`). Native inputs are used so each `input` event updates JsonForms core immediately; `UInput` alone could leave parent `:data` stale in some form-field setups.
 - **Integer**: JSON Schema `type: "integer"` → **native** `<input type="number" inputmode="numeric" step="1">` (parses to `integer`, empty becomes `undefined`). Same rationale as number.
 - **Boolean**: JSON Schema `type: "boolean"` → `USwitch`
-- **Enum (single-select)**: JSON Schema `enum: [...]` (or `oneOf: [{ const, title? }, ...]`) → `USelectMenu`
+- **Enum (single-select)**: JSON Schema `enum: [...]` (or `oneOf: [{ const, title? }, ...]`) → `UFieldGroup` with buttons for 2–4 options, otherwise `USelectMenu`. Button-group layout stays LTR; set `localeDirection: 'rtl'` in `createNuxtUiRenderers(...)` to apply RTL direction to option labels.
 - **Enum (multi-select)**: JSON Schema `type: "array"` with `items` being an enum schema (supports `$ref`’d `items`) → `USelectMenu multiple`
 
 ### Layouts

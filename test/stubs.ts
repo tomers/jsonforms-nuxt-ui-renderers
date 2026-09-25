@@ -116,6 +116,13 @@ export const UiStubs = {
     },
   }),
 
+  UFieldGroup: defineComponent({
+    name: 'UFieldGroup',
+    setup(_, { attrs, slots }) {
+      return () => h('div', attrs, slots.default ? slots.default() : [])
+    },
+  }),
+
   UButton: defineComponent({
     name: 'UButton',
     props: {
@@ -123,11 +130,12 @@ export const UiStubs = {
       type: { type: String, default: 'button' },
     },
     emits: ['click'],
-    setup(props, { slots, emit }) {
+    setup(props, { attrs, slots, emit }) {
       return () =>
         h(
           'button',
           {
+            ...attrs,
             type: props.type,
             disabled: props.disabled,
             onClick: () => emit('click'),
