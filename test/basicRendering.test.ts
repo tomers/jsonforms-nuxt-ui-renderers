@@ -106,6 +106,147 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect((input.element as HTMLInputElement).value).toBe('Alice')
   })
 
+  it.each([
+    {
+      name: 'string inside anyOf',
+      schema: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+      data: 'text',
+      component: 'UInput',
+    },
+    {
+      name: 'number inside oneOf',
+      schema: { oneOf: [{ type: 'number' }, { type: 'null' }] },
+      data: 12.5,
+      inputMode: 'decimal',
+    },
+    {
+      name: 'integer inside anyOf',
+      schema: { anyOf: [{ type: 'integer' }, { type: 'null' }] },
+      data: 12,
+      inputMode: 'numeric',
+    },
+    {
+      name: 'boolean inside oneOf',
+      schema: { oneOf: [{ type: 'boolean' }, { type: 'null' }] },
+      data: true,
+      component: 'USwitch',
+    },
+  ])(
+    'selects the correct renderer for nullable $name',
+    ({ schema, data, component, inputMode }) => {
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema: {
+            type: 'object',
+            properties: { nullable_value: schema },
+          },
+          uischema: {
+            type: 'Control',
+            scope: '#/properties/nullable_value',
+            label: 'Nullable value',
+          },
+          data: { nullable_value: data },
+          renderers: nuxtUiRenderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      if (component) {
+        expect(wrapper.findComponent({ name: component }).exists()).toBe(true)
+      } else {
+        expect(wrapper.find('input').attributes('inputmode')).toBe(inputMode)
+      }
+    },
+  )
+
+  it('uses options and titles from nullable enum variants only', () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            generation: {
+              anyOf: [
+                { type: 'string', enum: ['gen3', 'gen4'] },
+                { type: 'null' },
+              ],
+            },
+            mode: {
+              oneOf: [
+                {
+                  type: 'string',
+                  oneOf: [
+                    { const: 'manual', title: 'Manual mode' },
+                    { const: 'automatic', title: 'Automatic mode' },
+                  ],
+                },
+                { type: 'null' },
+              ],
+            },
+          },
+        },
+        uischema: {
+          type: 'VerticalLayout',
+          elements: [
+            {
+              type: 'Control',
+              scope: '#/properties/generation',
+              label: 'Generation',
+            },
+            { type: 'Control', scope: '#/properties/mode', label: 'Mode' },
+          ],
+        },
+        data: { generation: 'gen3', mode: 'manual' },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    const groups = wrapper.findAllComponents({ name: 'UFieldGroup' })
+    expect(groups).toHaveLength(2)
+    expect(groups[0]?.findAll('button').map((button) => button.text())).toEqual([
+      'gen3',
+      'gen4',
+    ])
+    expect(groups[1]?.findAll('button').map((button) => button.text())).toEqual([
+      'Manual mode',
+      'Automatic mode',
+    ])
+    expect(wrapper.text()).not.toContain('null')
+  })
+
+  it('does not match a nullable union with multiple non-null types', () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            ambiguous: {
+              anyOf: [
+                { type: 'string' },
+                { type: 'number' },
+                { type: 'null' },
+              ],
+            },
+          },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/ambiguous',
+          label: 'Ambiguous',
+        },
+        data: { ambiguous: 'value' },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    expect(wrapper.find('input').exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'USwitch' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'USelectMenu' }).exists()).toBe(false)
+    expect(wrapper.findComponent({ name: 'UFieldGroup' }).exists()).toBe(false)
+  })
+
   it('keeps enums with more than four options in a select', () => {
     const schema = {
       type: 'object',

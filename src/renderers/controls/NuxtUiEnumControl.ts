@@ -2,19 +2,21 @@ import type { ControlElement, JsonSchema } from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
 import { computed, defineComponent, h, resolveComponent } from 'vue'
 
+import { unwrapNullableSchema } from '../nullableSchema'
 import { controlDescription, trimmedOrUndefined } from '../util'
 
 type EnumOption = { label: string; value: unknown }
 export type LocaleDirection = 'ltr' | 'rtl'
 
 function schemaEnumOptions(schema: JsonSchema | undefined): EnumOption[] {
-  if (!schema) return []
+  const resolvedSchema = unwrapNullableSchema(schema)
+  if (!resolvedSchema) return []
 
-  if (Array.isArray(schema.enum)) {
-    return schema.enum.map((v) => ({ label: String(v), value: v }))
+  if (Array.isArray(resolvedSchema.enum)) {
+    return resolvedSchema.enum.map((v) => ({ label: String(v), value: v }))
   }
 
-  const oneOf = (schema as unknown as { oneOf?: unknown }).oneOf
+  const oneOf = resolvedSchema.oneOf
   if (!Array.isArray(oneOf)) return []
 
   const out: EnumOption[] = []

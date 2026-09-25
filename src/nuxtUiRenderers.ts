@@ -1,15 +1,8 @@
 import type { JsonFormsRendererRegistryEntry } from '@jsonforms/core'
 import {
-  and,
-  formatIs,
-  isBooleanControl,
-  isEnumControl,
   isEnumSchema,
-  isIntegerControl,
   isMultiLineControl,
-  isNumberControl,
   isObjectControl,
-  isStringControl,
   rankWith,
   Resolve,
   schemaTypeIs,
@@ -18,6 +11,7 @@ import {
 import { markRaw } from 'vue'
 
 import { createNuxtUiArrayListRenderer } from './renderers/complex/NuxtUiArrayListRenderer'
+import { unwrapNullableSchema } from './renderers/nullableSchema'
 import { NuxtUiObjectRenderer } from './renderers/complex/NuxtUiObjectRenderer'
 import { createNuxtUiBooleanControl } from './renderers/controls/NuxtUiBooleanControl'
 import {
@@ -45,6 +39,68 @@ import {
 const RANK = 10
 const ENUM_RANK = RANK + 1
 const PASSWORD_RANK = ENUM_RANK + 1
+
+function controlSchema(
+  uischema: unknown,
+  schema: unknown,
+  context: unknown,
+): Record<string, unknown> | undefined {
+  if (!uiTypeIs('Control')(uischema as any, schema as any, context as any)) {
+    return undefined
+  }
+
+  const scope = (uischema as any)?.scope
+  if (typeof scope !== 'string') return undefined
+
+  const rootSchema = (context as any)?.rootSchema ?? schema
+  try {
+    const resolved = Resolve.schema(schema as any, scope, rootSchema as any)
+    return unwrapNullableSchema(resolved)
+  } catch {
+    return undefined
+  }
+}
+
+const isControlWithType = (type: string) =>
+  (uischema: unknown, schema: unknown, context: unknown): boolean =>
+    controlSchema(uischema, schema, context)?.type === type
+
+const isEnumControl = (
+  uischema: unknown,
+  schema: unknown,
+  context: unknown,
+): boolean => {
+  const resolved = controlSchema(uischema, schema, context)
+  return resolved ? isEnumSchema(resolved as any) : false
+}
+
+const isOneOfEnumControl = (
+  uischema: unknown,
+  schema: unknown,
+  context: unknown,
+): boolean => {
+  const oneOf = controlSchema(uischema, schema, context)?.oneOf
+  return (
+    Array.isArray(oneOf) &&
+    oneOf.length > 0 &&
+    oneOf.every(
+      (entry) =>
+        typeof entry === 'object' &&
+        entry !== null &&
+        !Array.isArray(entry) &&
+        'const' in entry,
+    )
+  )
+}
+
+const isPasswordControl = (
+  uischema: unknown,
+  schema: unknown,
+  context: unknown,
+): boolean => {
+  const resolved = controlSchema(uischema, schema, context)
+  return resolved?.type === 'string' && resolved.format === 'password'
+}
 
 const isMultiEnumControl = (
   uischema: unknown,
@@ -85,36 +141,6 @@ const isMultiEnumControl = (
   return isEnumSchema(resolvedItems as any)
 }
 
-/** Matches oneOf: [{ const, title? }, ...] - enum-like schema with display labels. */
-const isOneOfEnumControl = (
-  uischema: unknown,
-  schema: unknown,
-  context: unknown,
-): boolean => {
-  if (!uiTypeIs('Control')(uischema as any, schema as any, context as any)) {
-    return false
-  }
-
-  const scope = (uischema as any)?.scope
-  if (typeof scope !== 'string') return false
-
-  const rootSchema = (context as any)?.rootSchema ?? (schema as any)
-  let resolved: any
-  try {
-    resolved = Resolve.schema(schema as any, scope, rootSchema)
-  } catch {
-    return false
-  }
-
-  const oneOf = resolved?.oneOf
-  if (!Array.isArray(oneOf) || oneOf.length === 0) return false
-
-  for (const entry of oneOf) {
-    if (typeof entry !== 'object' || entry === null) continue
-    if (!('const' in (entry as Record<string, unknown>))) return false
-  }
-  return true
-}
 
 export interface CreateNuxtUiRenderersOptions {
   /** Override theme classes. Use semantic jf-* or custom (Tailwind, etc.). */
@@ -178,15 +204,15 @@ export function createNuxtUiRenderers(
       renderer: markRaw(NuxtUiTextareaControl),
     },
     {
-      tester: rankWith(RANK, isNumberControl),
+      tester: rankWith(RANK, isControlWithType('number')),
       renderer: markRaw(NuxtUiNumberControl),
     },
     {
-      tester: rankWith(RANK, isIntegerControl),
+      tester: rankWith(RANK, isControlWithType('integer')),
       renderer: markRaw(NuxtUiIntegerControl),
     },
     {
-      tester: rankWith(RANK, isBooleanControl),
+      tester: rankWith(RANK, isControlWithType('boolean')),
       renderer: markRaw(createNuxtUiBooleanControl(theme)),
     },
     {
@@ -206,11 +232,11 @@ export function createNuxtUiRenderers(
       renderer: markRaw(enumControl),
     },
     {
-      tester: rankWith(PASSWORD_RANK, and(isStringControl, formatIs('password'))),
+      tester: rankWith(PASSWORD_RANK, isPasswordControl),
       renderer: markRaw(NuxtUiPasswordControl),
     },
     {
-      tester: rankWith(RANK, isStringControl),
+      tester: rankWith(RANK, isControlWithType('string')),
       renderer: markRaw(createNuxtUiStringControl(docsUrl)),
     },
   ]
