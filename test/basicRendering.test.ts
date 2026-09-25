@@ -104,6 +104,7 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     const input = wrapper.find('input')
     expect(input.exists()).toBe(true)
     expect((input.element as HTMLInputElement).value).toBe('Alice')
+    expect(wrapper.find('[aria-label^="Clear "]').exists()).toBe(false)
   })
 
   it.each([
@@ -213,6 +214,205 @@ describe('jsonforms-nuxt-ui-renderers', () => {
       'Automatic mode',
     ])
     expect(wrapper.text()).not.toContain('null')
+  })
+
+  it('clears a nullable small enum to null and allows selecting again', async () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            auto_off_policy: {
+              anyOf: [
+                {
+                  type: 'string',
+                  enum: ['never', 'after_10s', 'after_30s'],
+                },
+                { type: 'null' },
+              ],
+            },
+          },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/auto_off_policy',
+          label: 'Auto off policy',
+        },
+        data: { auto_off_policy: 'after_10s' },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    const fieldGroup = wrapper.findComponent({ name: 'UFieldGroup' })
+    expect(fieldGroup.exists()).toBe(true)
+    expect(fieldGroup.findAll('button').map((button) => button.text())).toEqual([
+      'never',
+      'after_10s',
+      'after_30s',
+    ])
+
+    const clearButton = wrapper.find('button[aria-label="Clear Auto off policy"]')
+    expect(clearButton.exists()).toBe(true)
+    await clearButton.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    let changes = wrapper.emitted('change') as unknown[][] | undefined
+    let payload = changes?.at(-1)?.[0] as
+      | { data: { auto_off_policy: string | null } }
+      | undefined
+    expect(payload?.data.auto_off_policy).toBeNull()
+
+    await fieldGroup.findAll('button')[2]?.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    changes = wrapper.emitted('change') as unknown[][] | undefined
+    payload = changes?.at(-1)?.[0] as
+      | { data: { auto_off_policy: string | null } }
+      | undefined
+    expect(payload?.data.auto_off_policy).toBe('after_30s')
+  })
+
+  it.each([
+    {
+      name: 'string',
+      schema: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+      data: 'initial',
+      componentName: 'UInput',
+    },
+    {
+      name: 'boolean',
+      schema: { oneOf: [{ type: 'boolean' }, { type: 'null' }] },
+      data: true,
+      componentName: 'USwitch',
+    },
+  ])('clears nullable non-enum $name controls to null', async ({ schema, data, componentName }) => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: { value: schema },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/value',
+          label: 'Value',
+        },
+        data: { value: data },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    expect(wrapper.findComponent({ name: componentName }).exists()).toBe(true)
+    expect(wrapper.find('button[aria-label="Clear Value"]').exists()).toBe(true)
+    await wrapper.find('button[aria-label="Clear Value"]').trigger('click')
+    await wrapper.vm.$nextTick()
+
+    const changes = wrapper.emitted('change') as unknown[][] | undefined
+    const payload = changes?.at(-1)?.[0] as
+      | { data: { value: string | boolean | null } }
+      | undefined
+    expect(payload?.data.value).toBeNull()
+  })
+
+  it('disables the clear affordance for a read-only nullable variant', () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            value: {
+              oneOf: [
+                { type: 'string', readOnly: true },
+                { type: 'null' },
+              ],
+            },
+          },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/value',
+          label: 'Value',
+        },
+        data: { value: 'fixed' },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    expect(
+      (wrapper.find('button[aria-label="Clear Value"]').element as HTMLButtonElement)
+        .disabled,
+    ).toBe(true)
+  })
+
+  it('disables nullable clear actions in JsonForms readonly mode', () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            value: {
+              anyOf: [{ type: 'string' }, { type: 'null' }],
+            },
+          },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/value',
+          label: 'Value',
+        },
+        data: { value: 'fixed' },
+        renderers: nuxtUiRenderers,
+        readonly: true,
+      },
+      global: { components: UiStubs },
+    })
+
+    expect(
+      (wrapper.find('button[aria-label="Clear Value"]').element as HTMLButtonElement)
+        .disabled,
+    ).toBe(true)
+  })
+
+  it('does not render a clear action for a hidden nullable control', () => {
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            hidden: { type: 'boolean' },
+            value: {
+              anyOf: [{ type: 'string' }, { type: 'null' }],
+            },
+          },
+        },
+        uischema: {
+          type: 'VerticalLayout',
+          elements: [
+            { type: 'Control', scope: '#/properties/hidden', label: 'Hidden' },
+            {
+              type: 'Control',
+              scope: '#/properties/value',
+              label: 'Value',
+              rule: {
+                effect: 'HIDE',
+                condition: {
+                  scope: '#/properties/hidden',
+                  schema: { const: true },
+                },
+              },
+            },
+          ],
+        },
+        data: { hidden: true, value: 'secret' },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    expect(wrapper.find('button[aria-label="Clear Value"]').exists()).toBe(false)
   })
 
   it('does not match a nullable union with multiple non-null types', () => {

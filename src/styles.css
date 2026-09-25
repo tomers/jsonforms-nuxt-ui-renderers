@@ -182,6 +182,17 @@
   gap: 0.25rem;
 }
 
+.jf-nullable-control {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--jf-gap);
+}
+
+.jf-nullable-control__value {
+  flex: 1;
+  min-width: 0;
+}
+
 /* Native `<input type="number">` for integer/number JsonForms controls (see README) */
 .jf-input-native {
   box-sizing: border-box;

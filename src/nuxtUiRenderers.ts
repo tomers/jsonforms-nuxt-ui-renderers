@@ -19,6 +19,7 @@ import {
   type LocaleDirection,
 } from './renderers/controls/NuxtUiEnumControl'
 import { NuxtUiIntegerControl } from './renderers/controls/NuxtUiIntegerControl'
+import { createNuxtUiNullableControl } from './renderers/controls/NuxtUiNullableControl'
 import { NuxtUiMultiEnumControl } from './renderers/controls/NuxtUiMultiEnumControl'
 import { NuxtUiNumberControl } from './renderers/controls/NuxtUiNumberControl'
 import { NuxtUiPasswordControl } from './renderers/controls/NuxtUiPasswordControl'
@@ -160,6 +161,17 @@ export function createNuxtUiRenderers(
   const theme = mergeTheme(options?.theme)
   const docsUrl = options?.docsUrl
   const enumControl = createNuxtUiEnumControl(options?.localeDirection)
+  const nullableEnumControl = createNuxtUiNullableControl(enumControl)
+  const nullableTextareaControl = createNuxtUiNullableControl(NuxtUiTextareaControl)
+  const nullableNumberControl = createNuxtUiNullableControl(NuxtUiNumberControl)
+  const nullableIntegerControl = createNuxtUiNullableControl(NuxtUiIntegerControl)
+  const nullableBooleanControl = createNuxtUiNullableControl(
+    createNuxtUiBooleanControl(theme),
+  )
+  const nullablePasswordControl = createNuxtUiNullableControl(NuxtUiPasswordControl)
+  const nullableStringControl = createNuxtUiNullableControl(
+    createNuxtUiStringControl(docsUrl),
+  )
 
   return [
     // Layouts
@@ -201,19 +213,19 @@ export function createNuxtUiRenderers(
     // Primitive controls
     {
       tester: rankWith(RANK, isMultiLineControl),
-      renderer: markRaw(NuxtUiTextareaControl),
+      renderer: markRaw(nullableTextareaControl),
     },
     {
       tester: rankWith(RANK, isControlWithType('number')),
-      renderer: markRaw(NuxtUiNumberControl),
+      renderer: markRaw(nullableNumberControl),
     },
     {
       tester: rankWith(RANK, isControlWithType('integer')),
-      renderer: markRaw(NuxtUiIntegerControl),
+      renderer: markRaw(nullableIntegerControl),
     },
     {
       tester: rankWith(RANK, isControlWithType('boolean')),
-      renderer: markRaw(createNuxtUiBooleanControl(theme)),
+      renderer: markRaw(nullableBooleanControl),
     },
     {
       // Multi-enum must outrank generic array renderer and string renderer.
@@ -223,21 +235,21 @@ export function createNuxtUiRenderers(
     {
       // oneOf with const+title (display labels) - same as enum for rendering.
       tester: rankWith(ENUM_RANK, isOneOfEnumControl),
-      renderer: markRaw(enumControl),
+      renderer: markRaw(nullableEnumControl),
     },
     {
       // Enum must outrank the generic string control, otherwise enums render
       // as freeform text inputs.
       tester: rankWith(ENUM_RANK, isEnumControl),
-      renderer: markRaw(enumControl),
+      renderer: markRaw(nullableEnumControl),
     },
     {
       tester: rankWith(PASSWORD_RANK, isPasswordControl),
-      renderer: markRaw(NuxtUiPasswordControl),
+      renderer: markRaw(nullablePasswordControl),
     },
     {
       tester: rankWith(RANK, isControlWithType('string')),
-      renderer: markRaw(createNuxtUiStringControl(docsUrl)),
+      renderer: markRaw(nullableStringControl),
     },
   ]
 }

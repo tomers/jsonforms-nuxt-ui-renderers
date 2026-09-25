@@ -55,3 +55,8 @@ export function unwrapNullableSchema(schema: unknown): SchemaRecord | undefined 
     current = nonNullVariants[0]
   }
 }
+
+export function isNullableSchema(schema: unknown): boolean {
+  const unwrapped = unwrapNullableSchema(schema)
+  return unwrapped !== undefined && unwrapped !== schema
+}
