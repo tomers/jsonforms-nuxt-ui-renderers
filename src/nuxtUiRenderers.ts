@@ -56,7 +56,7 @@ function controlSchema(
   const rootSchema = (context as any)?.rootSchema ?? schema
   try {
     const resolved = Resolve.schema(schema as any, scope, rootSchema as any)
-    return unwrapNullableSchema(resolved)
+    return unwrapNullableSchema(resolved, rootSchema)
   } catch {
     return undefined
   }

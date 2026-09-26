@@ -216,6 +216,177 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(wrapper.text()).not.toContain('null')
   })
 
+  it.each([
+    {
+      name: 'string enum via $defs and anyOf',
+      definitionsKey: '$defs',
+      definitionName: 'VirtualAccessDeviceKind',
+      combinator: 'anyOf',
+      target: {
+        type: 'string',
+        enum: ['virtual_access_directory', 'virtual_access_portal'],
+      },
+      data: 'virtual_access_directory',
+      expectedRenderer: 'enum',
+      expectedOptions: ['virtual_access_directory', 'virtual_access_portal'],
+    },
+    {
+      name: 'string via definitions and oneOf',
+      definitionsKey: 'definitions',
+      definitionName: 'StringValue',
+      combinator: 'oneOf',
+      target: { type: 'string' },
+      data: 'referenced text',
+      expectedRenderer: 'UInput',
+      expectedInputMode: undefined,
+      expectedOptions: [],
+    },
+    {
+      name: 'number via $defs and anyOf',
+      definitionsKey: '$defs',
+      definitionName: 'NumberValue',
+      combinator: 'anyOf',
+      target: { type: 'number' },
+      data: 3.14,
+      expectedRenderer: 'input',
+      expectedInputMode: 'decimal',
+      expectedOptions: [],
+    },
+    {
+      name: 'integer via definitions and oneOf',
+      definitionsKey: 'definitions',
+      definitionName: 'IntegerValue',
+      combinator: 'oneOf',
+      target: { type: 'integer' },
+      data: 42,
+      expectedRenderer: 'input',
+      expectedInputMode: 'numeric',
+      expectedOptions: [],
+    },
+    {
+      name: 'boolean via $defs and oneOf',
+      definitionsKey: '$defs',
+      definitionName: 'BooleanValue',
+      combinator: 'oneOf',
+      target: { type: 'boolean' },
+      data: true,
+      expectedRenderer: 'USwitch',
+      expectedInputMode: undefined,
+      expectedOptions: [],
+    },
+  ])('resolves nullable $name and supports clear-to-null', async ({
+    definitionsKey,
+    definitionName,
+    combinator,
+    target,
+    data,
+    expectedRenderer,
+    expectedInputMode,
+    expectedOptions,
+  }) => {
+    const reference = `#/${definitionsKey}/${definitionName}`
+    const wrapper = mount(JsonForms as any, {
+      props: {
+        schema: {
+          type: 'object',
+          properties: {
+            value: {
+              [combinator]: [{ $ref: reference }, { type: 'null' }],
+            },
+          },
+          [definitionsKey]: { [definitionName]: target },
+        },
+        uischema: {
+          type: 'Control',
+          scope: '#/properties/value',
+          label: 'Referenced value',
+        },
+        data: { value: data },
+        renderers: nuxtUiRenderers,
+      },
+      global: { components: UiStubs },
+    })
+
+    if (expectedRenderer === 'enum') {
+      const fieldGroup = wrapper.findComponent({ name: 'UFieldGroup' })
+      expect(fieldGroup.exists()).toBe(true)
+      expect(fieldGroup.findAll('button').map((button) => button.text())).toEqual(
+        expectedOptions,
+      )
+    } else if (expectedRenderer === 'input') {
+      expect(wrapper.find('input').attributes('inputmode')).toBe(expectedInputMode)
+    } else {
+      expect(wrapper.findComponent({ name: expectedRenderer }).exists()).toBe(true)
+    }
+
+    const clearButton = wrapper.find(
+      'button[aria-label="Clear Referenced value"]',
+    )
+    expect(clearButton.exists()).toBe(true)
+    await clearButton.trigger('click')
+    await wrapper.vm.$nextTick()
+
+    let changes = wrapper.emitted('change') as unknown[][] | undefined
+    let payload = changes?.at(-1)?.[0] as
+      | { data: { value: unknown } }
+      | undefined
+    expect(payload?.data.value).toBeNull()
+
+    if (expectedRenderer === 'enum') {
+      const fieldGroup = wrapper.findComponent({ name: 'UFieldGroup' })
+      await fieldGroup.findAll('button')[1]?.trigger('click')
+      await wrapper.vm.$nextTick()
+
+      changes = wrapper.emitted('change') as unknown[][] | undefined
+      payload = changes?.at(-1)?.[0] as
+        | { data: { value: unknown } }
+        | undefined
+      expect(payload?.data.value).toBe(expectedOptions[1])
+    }
+  })
+
+  it('does not match unresolved, circular, or external nullable references', () => {
+    const invalidReferenceSchemas = [
+      {
+        anyOf: [{ $ref: '#/$defs/Missing' }, { type: 'null' }],
+        $defs: {},
+      },
+      {
+        oneOf: [{ $ref: '#/$defs/Cycle' }, { type: 'null' }],
+        $defs: { Cycle: { $ref: '#/$defs/Cycle' } },
+      },
+      {
+        anyOf: [
+          { $ref: 'https://example.invalid/schemas/Value' },
+          { type: 'null' },
+        ],
+      },
+      {
+        anyOf: [{ $ref: '#' }, { type: 'null' }],
+      },
+    ]
+
+    for (const propertySchema of invalidReferenceSchemas) {
+      const rootSchema = {
+        type: 'object',
+        properties: { value: propertySchema },
+      }
+      const uischema = {
+        type: 'Control',
+        scope: '#/properties/value',
+        label: 'Value',
+      }
+      const ranks = createNuxtUiRenderers().map(({ tester }) =>
+        tester(uischema as any, rootSchema as any, {
+          rootSchema: rootSchema as any,
+          config: {},
+        }),
+      )
+
+      expect(ranks.every((rank) => rank === -1)).toBe(true)
+    }
+  })
+
   it('clears a nullable small enum to null and allows selecting again', async () => {
     const wrapper = mount(JsonForms as any, {
       props: {

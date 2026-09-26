@@ -2,7 +2,7 @@ import type { ControlElement } from '@jsonforms/core'
 import { rendererProps, useJsonFormsControl } from '@jsonforms/vue'
 import { defineComponent, h, resolveComponent, type Component } from 'vue'
 
-import { isNullableSchema, unwrapNullableSchema } from '../nullableSchema'
+import { resolveNullableSchema } from '../nullableSchema'
 
 export function createNuxtUiNullableControl(renderer: Component) {
   return defineComponent({
@@ -17,13 +17,16 @@ export function createNuxtUiNullableControl(renderer: Component) {
         if (!control.value.visible) return null
 
         const schema = control.value.schema as Record<string, unknown> | undefined
-        const resolvedSchema = unwrapNullableSchema(schema)
+        const nullableSchema = resolveNullableSchema(
+          schema,
+          control.value.rootSchema,
+        )
         const renderedControl = h(renderer, props)
-        if (!isNullableSchema(schema) || !resolvedSchema) return renderedControl
+        if (!nullableSchema?.nullable) return renderedControl
 
         const UButton = resolveComponent('UButton')
         const readOnly =
-          schema?.readOnly === true || resolvedSchema.readOnly === true
+          schema?.readOnly === true || nullableSchema.schema.readOnly === true
 
         return h(
           'div',

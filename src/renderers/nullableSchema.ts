@@ -1,4 +1,11 @@
+import { Resolve } from '@jsonforms/core'
+
 type SchemaRecord = Record<string, unknown>
+
+export interface ResolvedNullableSchema {
+  schema: SchemaRecord
+  nullable: boolean
+}
 
 function isSchemaRecord(value: unknown): value is SchemaRecord {
   return typeof value === 'object' && value !== null && !Array.isArray(value)
@@ -15,15 +22,68 @@ function isNullSchema(schema: unknown): schema is SchemaRecord {
   )
 }
 
+function resolveReference(
+  schema: SchemaRecord,
+  rootSchema: unknown,
+  visitedRefs: Set<string>,
+): SchemaRecord | undefined {
+  if (typeof schema.$ref !== 'string') return schema
+  if (
+    !isSchemaRecord(rootSchema) ||
+    !schema.$ref.startsWith('#/') ||
+    visitedRefs.has(schema.$ref)
+  ) {
+    return undefined
+  }
+
+  const annotations = new Set([
+    '$comment',
+    'deprecated',
+    'description',
+    'examples',
+    'readOnly',
+    'title',
+    'writeOnly',
+  ])
+  if (
+    Object.keys(schema).some(
+      (key) => key !== '$ref' && !annotations.has(key),
+    )
+  ) {
+    return undefined
+  }
+
+  visitedRefs.add(schema.$ref)
+  let referenced: unknown
+  try {
+    referenced = Resolve.schema(rootSchema as any, schema.$ref, rootSchema as any)
+  } catch {
+    return undefined
+  }
+  if (!isSchemaRecord(referenced)) return undefined
+
+  return resolveReference(referenced, rootSchema, visitedRefs)
+}
+
 /**
- * Unwrap only unambiguous nullable schemas. General unions and malformed or
- * multi-type unions are left unmatched so a renderer cannot guess incorrectly.
+ * Resolve local references and unwrap only unambiguous nullable schemas.
+ * General unions and unresolved or unsupported references remain unmatched.
  */
-export function unwrapNullableSchema(schema: unknown): SchemaRecord | undefined {
+export function resolveNullableSchema(
+  schema: unknown,
+  rootSchema?: unknown,
+): ResolvedNullableSchema | undefined {
   if (!isSchemaRecord(schema)) return undefined
 
   let current = schema
+  let nullable = false
+  const visitedRefs = new Set<string>()
+
   for (;;) {
+    const resolved = resolveReference(current, rootSchema, visitedRefs)
+    if (!resolved) return undefined
+    current = resolved
+
     const hasAnyOf = Object.prototype.hasOwnProperty.call(current, 'anyOf')
     const hasOneOf = Object.prototype.hasOwnProperty.call(current, 'oneOf')
 
@@ -35,16 +95,17 @@ export function unwrapNullableSchema(schema: unknown): SchemaRecord | undefined 
       )
       if (nonNullTypes.length !== 1 || current.type.length !== 2) return undefined
       current = { ...current, type: nonNullTypes[0] }
+      nullable = true
       continue
     }
 
-    if (!hasAnyOf && !hasOneOf) return current
+    if (!hasAnyOf && !hasOneOf) return { schema: current, nullable }
 
     const alternatives = hasAnyOf ? current.anyOf : current.oneOf
     if (!Array.isArray(alternatives)) return undefined
 
     const nullVariants = alternatives.filter(isNullSchema)
-    if (nullVariants.length === 0) return current
+    if (nullVariants.length === 0) return { schema: current, nullable }
     if (hasOneOf && nullVariants.length !== 1) return undefined
 
     const nonNullVariants = alternatives.filter((variant) => !isNullSchema(variant))
@@ -53,10 +114,13 @@ export function unwrapNullableSchema(schema: unknown): SchemaRecord | undefined 
     }
 
     current = nonNullVariants[0]
+    nullable = true
   }
 }
 
-export function isNullableSchema(schema: unknown): boolean {
-  const unwrapped = unwrapNullableSchema(schema)
-  return unwrapped !== undefined && unwrapped !== schema
+export function unwrapNullableSchema(
+  schema: unknown,
+  rootSchema?: unknown,
+): SchemaRecord | undefined {
+  return resolveNullableSchema(schema, rootSchema)?.schema
 }

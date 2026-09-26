@@ -8,8 +8,11 @@ import { controlDescription, trimmedOrUndefined } from '../util'
 type EnumOption = { label: string; value: unknown }
 export type LocaleDirection = 'ltr' | 'rtl'
 
-function schemaEnumOptions(schema: JsonSchema | undefined): EnumOption[] {
-  const resolvedSchema = unwrapNullableSchema(schema)
+function schemaEnumOptions(
+  schema: JsonSchema | undefined,
+  rootSchema: JsonSchema | undefined,
+): EnumOption[] {
+  const resolvedSchema = unwrapNullableSchema(schema, rootSchema)
   if (!resolvedSchema) return []
 
   if (Array.isArray(resolvedSchema.enum)) {
@@ -46,7 +49,7 @@ export function createNuxtUiEnumControl(localeDirection: LocaleDirection = 'ltr'
 
       const errorMessage = computed(() => trimmedOrUndefined(control.value.errors))
       const options = computed<EnumOption[]>(() =>
-        schemaEnumOptions(control.value.schema),
+        schemaEnumOptions(control.value.schema, control.value.rootSchema),
       )
 
       const selectedValue = computed<unknown>({
