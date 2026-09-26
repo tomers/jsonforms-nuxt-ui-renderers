@@ -193,6 +193,19 @@
   min-width: 0;
 }
 
+.jf-nullable-control__null-indicator {
+  flex: none;
+  padding-bottom: 0.375rem;
+  color: var(--jf-text-muted-color);
+  font-size: 0.875rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  .jf-nullable-control__null-indicator {
+    color: var(--jf-text-muted-color-dark);
+  }
+}
+
 /* Native `<input type="number">` for integer/number JsonForms controls (see README) */
 .jf-input-native {
   box-sizing: border-box;

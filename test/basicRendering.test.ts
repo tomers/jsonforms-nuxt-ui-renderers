@@ -487,6 +487,51 @@ describe('jsonforms-nuxt-ui-renderers', () => {
     expect(payload?.data.value).toBeNull()
   })
 
+  it.each([
+    { value: null, isNull: true },
+    { value: '', isNull: false },
+  ])(
+    'distinguishes nullable string null from an empty string',
+    async ({ value, isNull }) => {
+      const wrapper = mount(JsonForms as any, {
+        props: {
+          schema: {
+            type: 'object',
+            properties: {
+              value: { anyOf: [{ type: 'string' }, { type: 'null' }] },
+            },
+          },
+          uischema: {
+            type: 'Control',
+            scope: '#/properties/value',
+            label: 'Value',
+          },
+          data: { value },
+          renderers: nuxtUiRenderers,
+        },
+        global: { components: UiStubs },
+      })
+
+      expect((wrapper.find('input').element as HTMLInputElement).value).toBe('')
+      expect(
+        wrapper.find('[role="status"][aria-label="Value is null"]').exists(),
+      ).toBe(isNull)
+      expect(wrapper.find('button[aria-label="Clear Value"]').exists()).toBe(
+        !isNull,
+      )
+
+      if (!isNull) {
+        await wrapper.find('button[aria-label="Clear Value"]').trigger('click')
+        await wrapper.vm.$nextTick()
+
+        expect(wrapper.find('button[aria-label="Clear Value"]').exists()).toBe(
+          false,
+        )
+        expect(wrapper.find('[aria-label="Value is null"]').exists()).toBe(true)
+      }
+    },
+  )
+
   it('disables the clear affordance for a read-only nullable variant', () => {
     const wrapper = mount(JsonForms as any, {
       props: {

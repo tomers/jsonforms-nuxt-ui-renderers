@@ -27,26 +27,37 @@ export function createNuxtUiNullableControl(renderer: Component) {
         const UButton = resolveComponent('UButton')
         const readOnly =
           schema?.readOnly === true || nullableSchema.schema.readOnly === true
+        const isNull = control.value.data === null
 
         return h(
           'div',
           { class: 'jf-nullable-control' },
           [
             h('div', { class: 'jf-nullable-control__value' }, [renderedControl]),
-            h(
-              UButton as any,
-              {
-                type: 'button',
-                color: 'neutral',
-                variant: 'ghost',
-                disabled: !control.value.enabled || readOnly,
-                'aria-label': `Clear ${control.value.label || 'value'}`,
-                onClick: () => {
-                  handleChange(control.value.path, null)
-                },
-              },
-              () => 'Clear',
-            ),
+            isNull
+              ? h(
+                  'span',
+                  {
+                    class: 'jf-nullable-control__null-indicator',
+                    role: 'status',
+                    'aria-label': `${control.value.label || 'Value'} is null`,
+                  },
+                  'Null',
+                )
+              : h(
+                  UButton as any,
+                  {
+                    type: 'button',
+                    color: 'neutral',
+                    variant: 'ghost',
+                    disabled: !control.value.enabled || readOnly,
+                    'aria-label': `Clear ${control.value.label || 'value'}`,
+                    onClick: () => {
+                      handleChange(control.value.path, null)
+                    },
+                  },
+                  () => 'Clear',
+                ),
           ],
         )
       }

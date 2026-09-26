@@ -45,7 +45,7 @@ This package is intentionally small and opinionated: it ships a **single** rende
 - **Boolean**: JSON Schema `type: "boolean"` → `USwitch`
 - **Enum (single-select)**: JSON Schema `enum: [...]` (or `oneOf: [{ const, title? }, ...]`) → `UFieldGroup` with buttons for 2–4 options, otherwise `USelectMenu`. Button-group layout stays LTR; set `localeDirection: 'rtl'` in `createNuxtUiRenderers(...)` to apply RTL direction to option labels.
 - **Enum (multi-select)**: JSON Schema `type: "array"` with `items` being an enum schema (supports `$ref`’d `items`) → `USelectMenu multiple`
-- **Nullable controls**: unambiguous `anyOf` / `oneOf` schemas with one supported non-null variant and a null variant use the non-null control UI plus a **Clear** action that sets the value to `null`. Ambiguous unions are not guessed.
+- **Nullable controls**: unambiguous `anyOf` / `oneOf` schemas with one supported non-null variant and a null variant use the non-null control UI. A **Clear** action sets a non-null value to `null` and is hidden while the value is already `null`; a **Null** indicator makes the null state visible. An empty string (`""`) is a string value, not `null`, and remains clearable. Ambiguous unions are not guessed.
 
 ### Layouts
 
